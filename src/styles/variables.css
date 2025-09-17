@@ -1,0 +1,12 @@
+/* CSS 变量定义 */
+:root {
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #111;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #111827;
+  --green: #dcfce7;
+  --red: #fee2e2;
+  --yellow: #fef3c7;
+}

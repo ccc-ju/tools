@@ -1,0 +1,120 @@
+/* 组件样式 */
+
+/* 链接 */
+.link {
+  font-size: 12px;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* 标签页 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  background: #fff;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: transparent;
+  color: #374151;
+  border: 0;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* 卡片 */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+/* 按钮 */
+.btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #f8f9fa;
+  transform: translateY(-1px);
+}
+
+.btn.dark {
+  background: var(--primary);
+  color: #fff;
+  border-color: #111;
+}
+
+.btn.dark:hover {
+  background: #374151;
+  transform: translateY(-1px);
+}
+
+.btn.badge {
+  position: relative;
+}
+
+/* 提示消息 */
+.toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .8);
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* 文本样式 */
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* 差异对比标签 */
+.diff-tag.eq {
+  background: #f9fafb;
+}
+
+.diff-tag.add {
+  background: var(--green);
+}
+
+.diff-tag.del {
+  background: var(--red);
+}
+
+.diff-tag.replace {
+  background: var(--yellow);
+}

@@ -1,0 +1,12 @@
+# Cloudflare Pages 配置文件
+name = "online-toolbox"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "src"
+
+[build.upload]
+format = "directory"
+dir = "dist"

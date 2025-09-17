@@ -1,0 +1,58 @@
+/* 布局相关样式 */
+.container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 860px) {
+  .row-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.grid-2 {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 980px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.flex {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.space-y > * {
+  margin-bottom: 12px;
+}
+
+footer {
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 0;
+}
