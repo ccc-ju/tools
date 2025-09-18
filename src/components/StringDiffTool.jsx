@@ -413,7 +413,7 @@ function StringDiffTool() {
         }
       `}</style>
 
-            {/* 文本大小提示 */}
+            {/* 文本大小提示
             {(() => {
                 const totalLength = (leftText?.length || 0) + (rightText?.length || 0)
                 if (totalLength > 50000) {
@@ -446,7 +446,7 @@ function StringDiffTool() {
                     )
                 }
                 return null
-            })()}
+            })()} */}
 
             {/* 输入区域 */}
             <div className="grid-2" style={{ marginBottom: '24px' }}>
