@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { copyWithFallback } from '../utils/clipboard'
 import { convertCoordinates } from '../utils/coordinates'
+import { coordinateSystemInfo, usageScenarios } from '../utils/coordinateInfo'
 
 function CoordinateTool() {
   const [sourceLng, setSourceLng] = useState('')
@@ -114,9 +115,9 @@ function CoordinateTool() {
               value={sourceCoordSys}
               onChange={(e) => setSourceCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84 (国际标准)</option>
-              <option value="GCJ02">GCJ02 (火星坐标系)</option>
-              <option value="BD09">BD09 (百度坐标系)</option>
+              <option value="WGS84">WGS84 - GPS原始坐标 (Google Maps/国外地图)</option>
+              <option value="GCJ02">GCJ02 - 国测局坐标 (高德/腾讯/苹果地图)</option>
+              <option value="BD09">BD09 - 百度坐标 (百度地图专用)</option>
             </select>
           </div>
         </div>
@@ -127,9 +128,9 @@ function CoordinateTool() {
             value={targetCoordSys}
             onChange={(e) => setTargetCoordSys(e.target.value)}
           >
-            <option value="WGS84">WGS84 (国际标准)</option>
-            <option value="GCJ02">GCJ02 (火星坐标系)</option>
-            <option value="BD09">BD09 (百度坐标系)</option>
+            <option value="WGS84">WGS84 - GPS原始坐标 (Google Maps/国外地图)</option>
+            <option value="GCJ02">GCJ02 - 国测局坐标 (高德/腾讯/苹果地图)</option>
+            <option value="BD09">BD09 - 百度坐标 (百度地图专用)</option>
           </select>
         </div>
 
@@ -146,12 +147,39 @@ function CoordinateTool() {
           </div>
         </div>
 
-        <div style={{ marginTop: '16px' }}>
+        <div style={{ marginTop: '24px' }}>
           <div className="muted">
-            <strong>坐标系说明：</strong><br/>
-            • <strong>WGS84</strong>：国际标准，GPS设备、Google Earth等使用<br/>
-            • <strong>GCJ02</strong>：中国国家测绘局加密坐标，高德、腾讯地图等使用<br/>
-            • <strong>BD09</strong>：百度加密坐标，百度地图使用
+            <strong>📍 坐标系详细说明：</strong>
+          </div>
+          
+          <div style={{ marginTop: '12px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', fontSize: '13px', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#2563eb' }}>🌍 WGS84 (World Geodetic System 1984)</strong><br/>
+              <span style={{ color: '#6b7280' }}>• 国际标准GPS坐标系，全球通用</span><br/>
+              <span style={{ color: '#6b7280' }}>• 使用平台：Google Maps、OpenStreetMap、GPS设备、国外地图服务</span><br/>
+              <span style={{ color: '#6b7280' }}>• 特点：真实地理坐标，无偏移加密</span>
+            </div>
+            
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#dc2626' }}>🇨🇳 GCJ02 (国家测绘局02坐标系)</strong><br/>
+              <span style={{ color: '#6b7280' }}>• 中国国家测绘局制定的加密坐标系，俗称"火星坐标"</span><br/>
+              <span style={{ color: '#6b7280' }}>• 使用平台：高德地图、腾讯地图、苹果地图(中国)、谷歌地图(中国)</span><br/>
+              <span style={{ color: '#6b7280' }}>• 特点：在WGS84基础上加密偏移，保护国家地理信息安全</span>
+            </div>
+            
+            <div>
+              <strong style={{ color: '#7c3aed' }}>🅱️ BD09 (百度09坐标系)</strong><br/>
+              <span style={{ color: '#6b7280' }}>• 百度公司在GCJ02基础上再次加密的坐标系</span><br/>
+              <span style={{ color: '#6b7280' }}>• 使用平台：百度地图、百度API相关服务</span><br/>
+              <span style={{ color: '#6b7280' }}>• 特点：双重加密，仅百度系产品使用</span>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '12px', padding: '12px', background: '#fef3c7', borderRadius: '8px', fontSize: '12px' }}>
+            <strong>💡 使用建议：</strong><br/>
+            • 从GPS设备获取的坐标通常是WGS84<br/>
+            • 在国内地图应用中显示需转换为对应坐标系<br/>
+            • 不同坐标系间的偏移可达几百米，转换很重要
           </div>
         </div>
       </div>
@@ -189,9 +217,9 @@ function CoordinateTool() {
               value={batchSourceCoordSys}
               onChange={(e) => setBatchSourceCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84</option>
-              <option value="GCJ02">GCJ02</option>
-              <option value="BD09">BD09</option>
+              <option value="WGS84">WGS84 - GPS原始</option>
+              <option value="GCJ02">GCJ02 - 高德/腾讯</option>
+              <option value="BD09">BD09 - 百度地图</option>
             </select>
           </div>
           <div>
@@ -200,13 +228,14 @@ function CoordinateTool() {
               value={batchTargetCoordSys}
               onChange={(e) => setBatchTargetCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84</option>
-              <option value="GCJ02">GCJ02</option>
-              <option value="BD09">BD09</option>
+              <option value="WGS84">WGS84 - GPS原始</option>
+              <option value="GCJ02">GCJ02 - 高德/腾讯</option>
+              <option value="BD09">BD09 - 百度地图</option>
             </select>
           </div>
         </div>
       </div>
+
     </>
   )
 }
