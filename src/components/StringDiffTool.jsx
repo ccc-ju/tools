@@ -8,87 +8,92 @@ function StringDiffTool() {
   const [picked, setPicked] = useState({})
   const [mergedResult, setMergedResult] = useState('')
 
-  const tokenize = (str) => {
-    const arr = []
-    let buf = ''
-    const flush = () => {
-      if (buf) {
-        arr.push({ t: buf, k: 'w' })
-        buf = ''
-      }
-    }
-    for (const ch of str) {
-      if (/\w|[\u4e00-\u9fa5]/.test(ch)) {
-        buf += ch
-      } else {
-        flush()
-        arr.push({ t: ch, k: 's' })
-      }
-    }
-    flush()
-    return arr
-  }
-
-  const lcs = (a, b) => {
-    const n = a.length, m = b.length
+  // 字符级别的对比算法
+  const charLevelDiff = (str1, str2) => {
+    const chars1 = Array.from(str1)
+    const chars2 = Array.from(str2)
+    const n = chars1.length
+    const m = chars2.length
+    
+    // 动态规划计算最长公共子序列
     const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0))
     
     for (let i = n - 1; i >= 0; i--) {
       for (let j = m - 1; j >= 0; j--) {
-        dp[i][j] = a[i].t === b[j].t ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1])
+        if (chars1[i] === chars2[j]) {
+          dp[i][j] = dp[i + 1][j + 1] + 1
+        } else {
+          dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1])
+        }
       }
     }
     
-    const res = []
+    // 回溯构建差异序列
+    const result = []
     let i = 0, j = 0
+    
     while (i < n && j < m) {
-      if (a[i].t === b[j].t) {
-        res.push({ type: 'eq', token: a[i] })
+      if (chars1[i] === chars2[j]) {
+        result.push({ type: 'eq', char1: chars1[i], char2: chars2[j] })
         i++
         j++
       } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-        res.push({ type: 'del', token: a[i++] })
+        result.push({ type: 'del', char1: chars1[i], char2: null })
+        i++
       } else {
-        res.push({ type: 'add', token: b[j++] })
+        result.push({ type: 'add', char1: null, char2: chars2[j] })
+        j++
       }
     }
-    while (i < n) res.push({ type: 'del', token: a[i++] })
-    while (j < m) res.push({ type: 'add', token: b[j++] })
-    return res
+    
+    // 处理剩余字符
+    while (i < n) {
+      result.push({ type: 'del', char1: chars1[i], char2: null })
+      i++
+    }
+    while (j < m) {
+      result.push({ type: 'add', char1: null, char2: chars2[j] })
+      j++
+    }
+    
+    return result
   }
 
   const doDiff = () => {
-    const A = tokenize(leftText || '')
-    const B = tokenize(rightText || '')
-    const seq = lcs(A, B)
+    const charDiffs = charLevelDiff(leftText || '', rightText || '')
     const groups = []
     let i = 0
     
-    while (i < seq.length) {
-      const cur = seq[i]
+    while (i < charDiffs.length) {
+      const cur = charDiffs[i]
+      
       if (cur.type === 'eq') {
-        let text = cur.token.t
+        // 收集连续的相同字符
+        let text = cur.char1
         i++
-        while (i < seq.length && seq[i].type === 'eq') {
-          text += seq[i].token.t
+        while (i < charDiffs.length && charDiffs[i].type === 'eq') {
+          text += charDiffs[i].char1
           i++
         }
         groups.push({ kind: 'eq', a: text, b: text, key: groups.length })
         continue
       }
       
+      // 收集连续的删除字符
       let dels = ''
-      while (i < seq.length && seq[i].type === 'del') {
-        dels += seq[i].token.t
+      while (i < charDiffs.length && charDiffs[i].type === 'del') {
+        dels += charDiffs[i].char1
         i++
       }
       
+      // 收集连续的新增字符
       let adds = ''
-      while (i < seq.length && seq[i].type === 'add') {
-        adds += seq[i].token.t
+      while (i < charDiffs.length && charDiffs[i].type === 'add') {
+        adds += charDiffs[i].char2
         i++
       }
       
+      // 根据删除和新增的情况创建组
       if (dels && adds) {
         groups.push({ kind: 'replace', a: dels, b: adds, key: groups.length })
       } else if (dels) {
@@ -121,24 +126,46 @@ function StringDiffTool() {
     renderMerged(diffGroups, newPicked)
   }
 
-  const getDiffBlockStyle = (kind) => {
-    const colors = {
-      eq: { bg: '#f0f9ff', border: '#e5e7eb' },
-      add: { bg: '#f0fdf4', border: '#22c55e' },
-      del: { bg: '#fef2f2', border: '#ef4444' },
-      replace: { bg: '#fffbeb', border: '#f59e0b' }
-    }
-    return colors[kind] || colors.eq
-  }
-
-  const getDiffTitle = (kind) => {
-    const titles = {
-      eq: '✓ 一致',
-      add: '+ 新增（右侧）',
-      del: '- 删除（左侧）',
-      replace: '⚠ 替换'
-    }
-    return titles[kind] || '未知'
+  // 简单的高亮渲染：相同部分绿色，不同部分红色
+  const renderSimpleHighlightedText = (side) => {
+    return diffGroups.map((group, index) => {
+      const text = side === 'left' ? group.a : group.b
+      
+      if (group.kind === 'eq') {
+        // 相同部分：绿色背景
+        return (
+          <span 
+            key={index}
+            style={{
+              backgroundColor: '#dcfce7',
+              color: '#166534'
+            }}
+          >
+            {text}
+          </span>
+        )
+      } else {
+        // 不同部分：红色背景，可点击选择
+        const isSelected = picked[group.key] === side
+        return (
+          <span 
+            key={index}
+            onClick={() => handlePick(group.key, side)}
+            style={{
+              backgroundColor: '#fee2e2',
+              color: '#991b1b',
+              cursor: 'pointer',
+              border: isSelected ? '2px solid var(--primary)' : '2px solid transparent',
+              borderRadius: '3px',
+              padding: '1px 2px'
+            }}
+            title={`点击选择${side === 'left' ? '左侧' : '右侧'}内容`}
+          >
+            {text || '∅'}
+          </span>
+        )
+      }
+    })
   }
 
   return (
@@ -149,14 +176,21 @@ function StringDiffTool() {
           <button 
             className="btn dark" 
             onClick={doDiff}
-            style={{ padding: '10px 20px', borderRadius: '8px' }}
           >
             开始对比
           </button>
           <button 
             className="btn" 
+            onClick={() => {
+              setLeftText('111')
+              setRightText('121')
+            }}
+          >
+            示例(111 vs 121)
+          </button>
+          <button 
+            className="btn" 
             onClick={() => copyWithFallback(mergedResult)}
-            style={{ padding: '10px 20px', borderRadius: '8px' }}
           >
             复制合并结果
           </button>
@@ -185,95 +219,85 @@ function StringDiffTool() {
         </div>
       </div>
 
-      {/* 差异对比结果 */}
-      <div style={{ marginBottom: '24px' }}>
-        {diffGroups.map(g => {
-          const { bg, border } = getDiffBlockStyle(g.kind)
-          return (
-            <div 
-              key={g.key}
-              style={{ 
-                background: bg, 
-                border: `1px solid ${border}`, 
-                borderRadius: '12px', 
-                marginBottom: '16px', 
-                overflow: 'hidden' 
-              }}
-            >
-              {/* 标题栏 */}
+
+
+      {/* 整体对比视图 */}
+      {diffGroups.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div className="muted" style={{ marginBottom: '12px', fontWeight: '500' }}>📊 整体对比视图</div>
+          <div className="grid-2">
+            <div>
+              <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>原始字符串（左侧）</div>
               <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                padding: '12px 16px', 
-                borderBottom: '1px solid rgba(0,0,0,0.1)', 
-                fontWeight: '500' 
+                padding: '16px', 
+                background: 'var(--card)', 
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                fontFamily: 'monospace', 
+                whiteSpace: 'pre-wrap', 
+                wordBreak: 'break-word',
+                fontSize: '14px',
+                lineHeight: '1.6',
+                minHeight: '120px'
               }}>
-                {getDiffTitle(g.kind)}
-                {g.kind !== 'eq' && (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      className="btn"
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        background: picked[g.key] === 'left' ? '#3b82f6' : '#fff',
-                        color: picked[g.key] === 'left' ? '#fff' : '#000',
-                        border: `1px solid ${picked[g.key] === 'left' ? '#3b82f6' : '#d1d5db'}`
-                      }}
-                      onClick={() => handlePick(g.key, 'left')}
-                    >
-                      选择左侧
-                    </button>
-                    <button
-                      className="btn"
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        background: picked[g.key] === 'right' ? '#3b82f6' : '#fff',
-                        color: picked[g.key] === 'right' ? '#fff' : '#000',
-                        border: `1px solid ${picked[g.key] === 'right' ? '#3b82f6' : '#d1d5db'}`
-                      }}
-                      onClick={() => handlePick(g.key, 'right')}
-                    >
-                      选择右侧
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* 内容区域 */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr', 
-                gap: '1px', 
-                background: '#e5e7eb' 
-              }}>
-                <div style={{ 
-                  padding: '16px', 
-                  background: '#fff', 
-                  fontFamily: 'monospace', 
-                  whiteSpace: 'pre-wrap', 
-                  wordBreak: 'break-all' 
-                }}>
-                  {g.a || '∅ 空内容'}
-                </div>
-                <div style={{ 
-                  padding: '16px', 
-                  background: '#fff', 
-                  fontFamily: 'monospace', 
-                  whiteSpace: 'pre-wrap', 
-                  wordBreak: 'break-all' 
-                }}>
-                  {g.b || '∅ 空内容'}
-                </div>
+                {renderSimpleHighlightedText('left')}
               </div>
             </div>
-          )
-        })}
-      </div>
+            <div>
+              <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>对比字符串（右侧）</div>
+              <div style={{ 
+                padding: '16px', 
+                background: 'var(--card)', 
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                fontFamily: 'monospace', 
+                whiteSpace: 'pre-wrap', 
+                wordBreak: 'break-word',
+                fontSize: '14px',
+                lineHeight: '1.6',
+                minHeight: '120px'
+              }}>
+                {renderSimpleHighlightedText('right')}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 快速选择按钮 */}
+      {diffGroups.length > 0 && diffGroups.some(g => g.kind !== 'eq') && (
+        <div style={{ marginBottom: '20px' }}>
+          <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>🎯 快速选择</div>
+          <div className="flex" style={{ gap: '12px' }}>
+            <button 
+              className="btn" 
+              onClick={() => {
+                const newPicked = {}
+                diffGroups.forEach(g => {
+                  if (g.kind !== 'eq') newPicked[g.key] = 'left'
+                })
+                setPicked(newPicked)
+                renderMerged(diffGroups, newPicked)
+              }}
+            >
+              全选左侧
+            </button>
+            <button 
+              className="btn" 
+              onClick={() => {
+                const newPicked = {}
+                diffGroups.forEach(g => {
+                  if (g.kind !== 'eq') newPicked[g.key] = 'right'
+                })
+                setPicked(newPicked)
+                renderMerged(diffGroups, newPicked)
+              }}
+            >
+              全选右侧
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 合并结果 */}
       <div>

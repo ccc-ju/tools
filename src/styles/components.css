@@ -175,3 +175,58 @@
 .coord-text {
   color: var(--coord-text-color) !important;
 }
+
+/* 字符串对比高亮样式 */
+.diff-highlight-add {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.diff-highlight-del {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.diff-highlight-replace-left {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.diff-highlight-replace-right {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+/* 深色模式下的高亮样式 */
+[data-theme="dark"] .diff-highlight-add {
+  background: #166534;
+  color: #dcfce7;
+}
+
+[data-theme="dark"] .diff-highlight-del {
+  background: #991b1b;
+  color: #fee2e2;
+}
+
+[data-theme="dark"] .diff-highlight-replace-left {
+  background: #991b1b;
+  color: #fee2e2;
+}
+
+[data-theme="dark"] .diff-highlight-replace-right {
+  background: #166534;
+  color: #dcfce7;
+}
