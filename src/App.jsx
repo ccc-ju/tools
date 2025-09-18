@@ -6,10 +6,10 @@ import CoordinateTool from './components/CoordinateTool'
 function App() {
     const [activeTab, setActiveTab] = useState('ts')
     const [isDarkMode, setIsDarkMode] = useState(() => {
-        // 检查本地存储或系统偏好
+        // 检查本地存储，如果没有则默认为浅色模式
         const saved = localStorage.getItem('theme')
         if (saved) return saved === 'dark'
-        return window.matchMedia('(prefers-color-scheme: dark)').matches
+        return false // 默认浅色模式
     })
 
     const tabs = [
