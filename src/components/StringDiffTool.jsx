@@ -181,15 +181,6 @@ function StringDiffTool() {
           </button>
           <button 
             className="btn" 
-            onClick={() => {
-              setLeftText('111')
-              setRightText('121')
-            }}
-          >
-            示例(111 vs 121)
-          </button>
-          <button 
-            className="btn" 
             onClick={() => copyWithFallback(mergedResult)}
           >
             复制合并结果
