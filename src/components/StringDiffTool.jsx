@@ -134,55 +134,176 @@ function StringDiffTool() {
         return result
     }
 
-    // 行级对比算法，用于处理大型文本
+    // 混合策略：行级对比 + 字符级精确对比
     const lineLevelDiff = (str1, str2) => {
         const lines1 = str1.split('\n')
         const lines2 = str2.split('\n')
         const result = []
 
+        // 首先进行行级对比，找出相同和不同的行
+        const lineChanges = getLineChanges(lines1, lines2)
+        
+        // 对每个变化进行处理
+        for (const change of lineChanges) {
+            if (change.type === 'eq') {
+                // 相同行，直接添加
+                const line = change.line + '\n'
+                for (const char of line) {
+                    result.push({ type: 'eq', char1: char, char2: char })
+                }
+            } else if (change.type === 'replace') {
+                // 不同行，进行字符级精确对比
+                const charDiff = getCharDiffForLines(change.oldLine, change.newLine)
+                result.push(...charDiff)
+                
+                // 添加换行符的处理
+                result.push({ type: 'eq', char1: '\n', char2: '\n' })
+            } else if (change.type === 'del') {
+                // 删除的行
+                const line = change.line + '\n'
+                for (const char of line) {
+                    result.push({ type: 'del', char1: char, char2: null })
+                }
+            } else if (change.type === 'add') {
+                // 新增的行
+                const line = change.line + '\n'
+                for (const char of line) {
+                    result.push({ type: 'add', char1: null, char2: char })
+                }
+            }
+        }
+
+        return result
+    }
+
+    // 获取行级变化
+    const getLineChanges = (lines1, lines2) => {
+        const changes = []
         let i = 0, j = 0
 
         while (i < lines1.length && j < lines2.length) {
             if (lines1[i] === lines2[j]) {
-                // 相同行，转换为字符级结果
-                const line = lines1[i] + '\n'
-                for (const char of line) {
-                    result.push({ type: 'eq', char1: char, char2: char })
-                }
+                // 相同行
+                changes.push({ type: 'eq', line: lines1[i] })
                 i++
                 j++
             } else {
-                // 不同行，简单处理为删除和添加
-                const line1 = lines1[i] + '\n'
-                const line2 = lines2[j] + '\n'
-
-                for (const char of line1) {
-                    result.push({ type: 'del', char1: char, char2: null })
+                // 寻找最佳匹配策略
+                const match = findBestLineMatch(lines1, lines2, i, j)
+                
+                if (match.type === 'replace') {
+                    // 替换：两行都存在但内容不同，进行字符级对比
+                    changes.push({ 
+                        type: 'replace', 
+                        oldLine: lines1[i], 
+                        newLine: lines2[j] 
+                    })
+                    i++
+                    j++
+                } else if (match.type === 'delete') {
+                    // 删除：左侧有行，右侧没有对应行
+                    for (let k = 0; k < match.count; k++) {
+                        changes.push({ type: 'del', line: lines1[i + k] })
+                    }
+                    i += match.count
+                } else if (match.type === 'insert') {
+                    // 插入：右侧有行，左侧没有对应行
+                    for (let k = 0; k < match.count; k++) {
+                        changes.push({ type: 'add', line: lines2[j + k] })
+                    }
+                    j += match.count
                 }
-                for (const char of line2) {
-                    result.push({ type: 'add', char1: null, char2: char })
-                }
-                i++
-                j++
             }
         }
 
         // 处理剩余行
         while (i < lines1.length) {
-            const line = lines1[i] + '\n'
-            for (const char of line) {
-                result.push({ type: 'del', char1: char, char2: null })
-            }
+            changes.push({ type: 'del', line: lines1[i] })
             i++
         }
         while (j < lines2.length) {
-            const line = lines2[j] + '\n'
-            for (const char of line) {
-                result.push({ type: 'add', char1: null, char2: char })
-            }
+            changes.push({ type: 'add', line: lines2[j] })
             j++
         }
 
+        return changes
+    }
+
+    // 寻找最佳行匹配策略
+    const findBestLineMatch = (lines1, lines2, i, j) => {
+        const lookAhead = Math.min(5, lines1.length - i, lines2.length - j)
+        
+        // 检查是否是简单的一对一替换
+        if (i + 1 < lines1.length && j + 1 < lines2.length) {
+            if (lines1[i + 1] === lines2[j + 1]) {
+                return { type: 'replace' }
+            }
+        }
+        
+        // 寻找下一个匹配点
+        for (let k = 1; k <= lookAhead; k++) {
+            // 检查删除情况
+            if (i + k < lines1.length && lines1[i + k] === lines2[j]) {
+                return { type: 'delete', count: k }
+            }
+            // 检查插入情况
+            if (j + k < lines2.length && lines1[i] === lines2[j + k]) {
+                return { type: 'insert', count: k }
+            }
+        }
+        
+        // 默认为替换
+        return { type: 'replace' }
+    }
+
+    // 对两行进行字符级精确对比
+    const getCharDiffForLines = (line1, line2) => {
+        const chars1 = Array.from(line1)
+        const chars2 = Array.from(line2)
+        const n = chars1.length
+        const m = chars2.length
+        
+        // 对于行内对比，使用精确的动态规划算法
+        const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0))
+        
+        for (let i = n - 1; i >= 0; i--) {
+            for (let j = m - 1; j >= 0; j--) {
+                if (chars1[i] === chars2[j]) {
+                    dp[i][j] = dp[i + 1][j + 1] + 1
+                } else {
+                    dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1])
+                }
+            }
+        }
+        
+        // 回溯构建差异序列
+        const result = []
+        let i = 0, j = 0
+        
+        while (i < n && j < m) {
+            if (chars1[i] === chars2[j]) {
+                result.push({ type: 'eq', char1: chars1[i], char2: chars2[j] })
+                i++
+                j++
+            } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+                result.push({ type: 'del', char1: chars1[i], char2: null })
+                i++
+            } else {
+                result.push({ type: 'add', char1: null, char2: chars2[j] })
+                j++
+            }
+        }
+        
+        // 处理剩余字符
+        while (i < n) {
+            result.push({ type: 'del', char1: chars1[i], char2: null })
+            i++
+        }
+        while (j < m) {
+            result.push({ type: 'add', char1: null, char2: chars2[j] })
+            j++
+        }
+        
         return result
     }
 
@@ -212,7 +333,7 @@ function StringDiffTool() {
         try {
             // 根据字符串大小显示不同的处理消息
             if (totalLength > 50000) {
-                setProcessingMessage('处理大型文本中，使用行级对比算法...')
+                setProcessingMessage('处理大型文本中，使用混合策略（行级+字符级精确对比）...')
             } else if (totalLength > 10000) {
                 setProcessingMessage('处理中等文本中，使用优化算法...')
             } else {
@@ -402,6 +523,24 @@ function StringDiffTool() {
                     >
                         复制合并结果
                     </button>
+                    <button
+                        className="btn"
+                        onClick={() => {
+                            setLeftText('')
+                            setRightText('')
+                            setDiffGroups([])
+                            setPicked({})
+                            setMergedResult('')
+                        }}
+                        disabled={isProcessing}
+                        style={{ 
+                            backgroundColor: '#fee2e2', 
+                            color: '#991b1b',
+                            border: '1px solid #fecaca'
+                        }}
+                    >
+                        清空全部
+                    </button>
                 </div>
             </div>
 
@@ -412,41 +551,6 @@ function StringDiffTool() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-
-            {/* 文本大小提示
-            {(() => {
-                const totalLength = (leftText?.length || 0) + (rightText?.length || 0)
-                if (totalLength > 50000) {
-                    return (
-                        <div style={{
-                            padding: '12px 16px',
-                            backgroundColor: '#fef3c7',
-                            border: '1px solid #f59e0b',
-                            borderRadius: '8px',
-                            marginBottom: '16px',
-                            fontSize: '14px',
-                            color: '#92400e'
-                        }}>
-                            ⚠️ 检测到大型文本（{totalLength.toLocaleString()} 字符），将使用行级对比算法以提高性能。
-                        </div>
-                    )
-                } else if (totalLength > 10000) {
-                    return (
-                        <div style={{
-                            padding: '12px 16px',
-                            backgroundColor: '#dbeafe',
-                            border: '1px solid #3b82f6',
-                            borderRadius: '8px',
-                            marginBottom: '16px',
-                            fontSize: '14px',
-                            color: '#1e40af'
-                        }}>
-                            ℹ️ 检测到中等大小文本（{totalLength.toLocaleString()} 字符），将使用优化算法处理。
-                        </div>
-                    )
-                }
-                return null
-            })()} */}
 
             {/* 输入区域 */}
             <div className="grid-2" style={{ marginBottom: '24px' }}>
@@ -568,10 +672,44 @@ function StringDiffTool() {
 
             {/* 合并结果 */}
             <div>
-                <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>合并结果（可二次编辑）</div>
+                <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <div className="muted" style={{ fontWeight: '500' }}>
+                        合并结果（可二次编辑）
+                        {mergedResult && (
+                            <span style={{ fontSize: '12px', marginLeft: '8px' }}>
+                                ({mergedResult.length.toLocaleString()} 字符)
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex" style={{ gap: '8px' }}>
+                        <button
+                            className="btn"
+                            onClick={() => copyWithFallback(mergedResult)}
+                            disabled={!mergedResult}
+                            style={{ fontSize: '12px', padding: '6px 12px' }}
+                        >
+                            📋 复制结果
+                        </button>
+                        <button
+                            className="btn"
+                            onClick={() => setMergedResult('')}
+                            disabled={!mergedResult}
+                            style={{ 
+                                fontSize: '12px', 
+                                padding: '6px 12px',
+                                backgroundColor: '#fee2e2', 
+                                color: '#991b1b',
+                                border: '1px solid #fecaca'
+                            }}
+                        >
+                            🗑️ 清空结果
+                        </button>
+                    </div>
+                </div>
                 <textarea
                     value={mergedResult}
                     onChange={(e) => setMergedResult(e.target.value)}
+                    placeholder="合并结果将显示在这里..."
                     style={{
                         borderRadius: '8px',
                         padding: '16px',

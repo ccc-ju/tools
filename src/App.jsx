@@ -11,6 +11,7 @@ function App() {
         if (saved) return saved === 'dark'
         return false // 默认浅色模式
     })
+    const [showScrollToTop, setShowScrollToTop] = useState(false)
 
     const tabs = [
         { id: 'ts', label: '时间戳转换', component: TimestampTool },
@@ -26,8 +27,26 @@ function App() {
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
     }, [isDarkMode])
 
+    // 监听滚动事件，控制回到顶部按钮的显示
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+            setShowScrollToTop(scrollTop > 300) // 滚动超过300px时显示按钮
+        }
+
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode)
+    }
+
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
     }
 
     return (
@@ -64,6 +83,18 @@ function App() {
             </section>
 
             <footer>© {new Date().getFullYear()} – Devin - juju</footer>
+
+            {/* 全局回到顶部按钮 */}
+            {showScrollToTop && (
+                <button
+                    className="scroll-to-top"
+                    onClick={scrollToTop}
+                    aria-label="回到顶部"
+                    title="回到顶部"
+                >
+                    ↑
+                </button>
+            )}
         </div>
     )
 }
