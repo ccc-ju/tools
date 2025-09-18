@@ -9,4 +9,40 @@
   --green: #dcfce7;
   --red: #fee2e2;
   --yellow: #fef3c7;
+  --input-bg: #fff;
+  --input-readonly-bg: #f8f9fa;
+  --hover-bg: #f8f9fa;
+  
+  /* 坐标说明专用颜色 */
+  --coord-info-bg: #f8f9fa;
+  --coord-tip-bg: #fef3c7;
+  --coord-ref-bg: #f0f9ff;
+  --coord-wgs84-color: #2563eb;
+  --coord-gcj02-color: #dc2626;
+  --coord-bd09-color: #7c3aed;
+  --coord-text-color: #6b7280;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #334155;
+  --primary: #3b82f6;
+  --green: #166534;
+  --red: #991b1b;
+  --yellow: #a16207;
+  --input-bg: #334155;
+  --input-readonly-bg: #475569;
+  --hover-bg: #475569;
+  
+  /* 深色模式下坐标说明保持高对比度 */
+  --coord-info-bg: #374151;
+  --coord-tip-bg: #451a03;
+  --coord-ref-bg: #1e3a8a;
+  --coord-wgs84-color: #60a5fa;
+  --coord-gcj02-color: #f87171;
+  --coord-bd09-color: #a78bfa;
+  --coord-text-color: #e5e7eb;
 }

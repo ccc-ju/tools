@@ -203,41 +203,41 @@ function CoordinateTool() {
       <div className="card">
         <h2>📍 坐标系详细说明</h2>
 
-        <div style={{ marginTop: '16px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', fontSize: '13px', lineHeight: '1.6' }}>
+        <div className="coord-info-section">
           <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: '#2563eb' }}>🌍 WGS84 (World Geodetic System 1984)</strong><br />
-            <span style={{ color: '#6b7280' }}>• 国际标准GPS坐标系，全球通用</span><br />
-            <span style={{ color: '#6b7280' }}>• 使用平台：Google Maps、OpenStreetMap、GPS设备、国外地图服务</span><br />
-            <span style={{ color: '#6b7280' }}>• 特点：真实地理坐标，无偏移加密</span>
+            <strong className="coord-wgs84">🌍 WGS84 (World Geodetic System 1984)</strong><br />
+            <span className="coord-text">• 国际标准GPS坐标系，全球通用</span><br />
+            <span className="coord-text">• 使用平台：Google Maps、OpenStreetMap、GPS设备、国外地图服务</span><br />
+            <span className="coord-text">• 特点：真实地理坐标，无偏移加密</span>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: '#dc2626' }}>🇨🇳 GCJ02 (国家测绘局02坐标系)</strong><br />
-            <span style={{ color: '#6b7280' }}>• 中国国家测绘局制定的加密坐标系，俗称"火星坐标"</span><br />
-            <span style={{ color: '#6b7280' }}>• 使用平台：高德地图、腾讯地图、苹果地图(中国)、谷歌地图(中国)</span><br />
-            <span style={{ color: '#6b7280' }}>• 特点：在WGS84基础上加密偏移，保护国家地理信息安全</span>
+            <strong className="coord-gcj02">🇨🇳 GCJ02 (国家测绘局02坐标系)</strong><br />
+            <span className="coord-text">• 中国国家测绘局制定的加密坐标系，俗称"火星坐标"</span><br />
+            <span className="coord-text">• 使用平台：高德地图、腾讯地图、苹果地图(中国)、谷歌地图(中国)</span><br />
+            <span className="coord-text">• 特点：在WGS84基础上加密偏移，保护国家地理信息安全</span>
           </div>
 
           <div>
-            <strong style={{ color: '#7c3aed' }}>🅱️ BD09 (百度09坐标系)</strong><br />
-            <span style={{ color: '#6b7280' }}>• 百度公司在GCJ02基础上再次加密的坐标系</span><br />
-            <span style={{ color: '#6b7280' }}>• 使用平台：百度地图、百度API相关服务</span><br />
-            <span style={{ color: '#6b7280' }}>• 特点：双重加密，仅百度系产品使用</span>
+            <strong className="coord-bd09">🅱️ BD09 (百度09坐标系)</strong><br />
+            <span className="coord-text">• 百度公司在GCJ02基础上再次加密的坐标系</span><br />
+            <span className="coord-text">• 使用平台：百度地图、百度API相关服务</span><br />
+            <span className="coord-text">• 特点：双重加密，仅百度系产品使用</span>
           </div>
         </div>
 
-        <div style={{ marginTop: '16px', padding: '12px', background: '#fef3c7', borderRadius: '8px', fontSize: '12px' }}>
-          <strong>💡 使用建议：</strong><br />
-          • 从GPS设备获取的坐标通常是WGS84<br />
-          • 在国内地图应用中显示需转换为对应坐标系<br />
-          • 不同坐标系间的偏移可达几百米，转换很重要
+        <div className="coord-tip-section">
+          <strong className="coord-text">💡 使用建议：</strong><br />
+          <span className="coord-text">• 从GPS设备获取的坐标通常是WGS84</span><br />
+          <span className="coord-text">• 在国内地图应用中显示需转换为对应坐标系</span><br />
+          <span className="coord-text">• 不同坐标系间的偏移可达几百米，转换很重要</span>
         </div>
 
-        <div style={{ marginTop: '16px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', fontSize: '12px' }}>
-          <strong>📊 偏移程度参考：</strong><br />
-          • WGS84 → GCJ02：通常偏移50-500米<br />
-          • GCJ02 → BD09：通常偏移50-200米<br />
-          • WGS84 → BD09：通常偏移100-600米
+        <div className="coord-ref-section">
+          <strong className="coord-text">📊 偏移程度参考：</strong><br />
+          <span className="coord-text">• WGS84 → GCJ02：通常偏移50-500米</span><br />
+          <span className="coord-text">• GCJ02 → BD09：通常偏移50-200米</span><br />
+          <span className="coord-text">• WGS84 → BD09：通常偏移100-600米</span>
         </div>
       </div>
     </>

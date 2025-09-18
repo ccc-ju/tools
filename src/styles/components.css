@@ -3,7 +3,7 @@
 /* 链接 */
 .link {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   text-decoration: none;
 }
 
@@ -15,7 +15,7 @@
 .tabs {
   display: flex;
   gap: 8px;
-  background: #fff;
+  background: var(--card);
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -26,14 +26,19 @@
   padding: 8px 16px;
   border-radius: 12px;
   background: transparent;
-  color: #374151;
+  color: var(--muted);
   border: 0;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .tab[aria-selected="true"] {
   background: var(--primary);
   color: #fff;
+}
+
+.tab:hover:not([aria-selected="true"]) {
+  background: var(--hover-bg);
 }
 
 /* 卡片 */
@@ -49,6 +54,7 @@
 .card h2 {
   margin: 0 0 12px;
   font-size: 18px;
+  color: var(--text);
 }
 
 /* 按钮 */
@@ -56,25 +62,26 @@
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--card);
+  color: var(--text);
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .btn:hover {
-  background: #f8f9fa;
+  background: var(--hover-bg);
   transform: translateY(-1px);
 }
 
 .btn.dark {
   background: var(--primary);
   color: #fff;
-  border-color: #111;
+  border-color: var(--primary);
 }
 
 .btn.dark:hover {
-  background: #374151;
+  background: #2563eb;
   transform: translateY(-1px);
 }
 
@@ -94,6 +101,7 @@
   background: rgba(0, 0, 0, .8);
   color: #fff;
   white-space: nowrap;
+  z-index: 1000;
 }
 
 /* 文本样式 */
@@ -104,17 +112,66 @@
 
 /* 差异对比标签 */
 .diff-tag.eq {
-  background: #f9fafb;
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 
 .diff-tag.add {
   background: var(--green);
+  color: #fff;
 }
 
 .diff-tag.del {
   background: var(--red);
+  color: #fff;
 }
 
 .diff-tag.replace {
   background: var(--yellow);
+  color: #000;
+}
+
+/* 坐标系说明专用样式 - 确保在深色模式下清晰可读 */
+.coord-info-section {
+  background: var(--coord-info-bg) !important;
+  color: var(--coord-text-color) !important;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+
+.coord-tip-section {
+  background: var(--coord-tip-bg) !important;
+  color: var(--coord-text-color) !important;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  margin-top: 16px;
+}
+
+.coord-ref-section {
+  background: var(--coord-ref-bg) !important;
+  color: var(--coord-text-color) !important;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  margin-top: 16px;
+}
+
+.coord-wgs84 {
+  color: var(--coord-wgs84-color) !important;
+}
+
+.coord-gcj02 {
+  color: var(--coord-gcj02-color) !important;
+}
+
+.coord-bd09 {
+  color: var(--coord-bd09-color) !important;
+}
+
+.coord-text {
+  color: var(--coord-text-color) !important;
 }

@@ -18,6 +18,23 @@ header {
   justify-content: space-between;
 }
 
+.theme-toggle {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.theme-toggle:hover {
+  background: var(--hover-bg);
+  transform: translateY(-1px);
+}
+
 .row {
   display: grid;
   gap: 12px;
@@ -51,7 +68,7 @@ header {
 }
 
 footer {
-  color: #9ca3af;
+  color: var(--muted);
   font-size: 12px;
   text-align: center;
   padding: 24px 0;
