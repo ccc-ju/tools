@@ -513,22 +513,29 @@ const IPhoneTool = () => {
         }
         
         setMonitorResults(prevResults => {
-            // 检查是否已经有相同产品的最近结果（避免重复）
-            const recentResult = prevResults.find(r => 
-                r.name === result.name && 
-                r.productNo === result.productNo &&
-                Math.abs(r.timestamp - result.timestamp) < 10000 // 10秒内的结果视为重复
-            )
-            
-            if (recentResult) {
-                // 如果有重复结果，更新现有结果而不是添加新的
-                console.log('🔄 更新现有结果，避免重复');
-                return prevResults.map(r => 
-                    r.name === result.name && r.productNo === result.productNo ? result : r
-                )
+            // 如果结果列表为空（比如刚清空），直接添加新结果
+            if (prevResults.length === 0) {
+                console.log('➕ 添加监控结果（结果列表为空）');
+                return [result]
             }
             
-            // 保留最近10条记录
+            // 检查最近的结果是否是相同产品且时间太近（避免真正的重复）
+            const lastResult = prevResults[0] // 最新的结果
+            const isRecentDuplicate = lastResult && 
+                lastResult.name === result.name && 
+                lastResult.productNo === result.productNo &&
+                Math.abs(result.timestamp - lastResult.timestamp) < 3000 && // 3秒内且
+                lastResult.available === result.available // 状态也相同才算重复
+            
+            if (isRecentDuplicate) {
+                // 更新最新结果的时间戳，但不添加新项
+                console.log('🔄 更新最新结果时间戳，避免重复');
+                const updatedResults = [...prevResults]
+                updatedResults[0] = result // 更新第一个结果
+                return updatedResults
+            }
+            
+            // 添加新结果，保留最近10条记录
             const newResults = [result, ...prevResults].slice(0, 10)
             console.log('➕ 添加新的监控结果');
             return newResults
@@ -545,7 +552,9 @@ const IPhoneTool = () => {
                 })
             }
         } else {
-            setNotification(`✅ 检查完成 - 暂无库存 (第 ${requestCounter} 次检查)`)
+            // 确保在监控时显示检查完成的状态
+            const currentCount = requestCounter + 1 // 因为requestCounter还没有被更新到最新值
+            setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
         }
 
         // 如果正在监控，启动倒计时
@@ -661,26 +670,13 @@ const IPhoneTool = () => {
                         <button 
                             onClick={() => {
                                 setMonitorResults([])
-                                // 注意：不重置requestCounter和lastCheckTime，保持监控状态可见
+                                setNotification('已清空监控结果，继续监控中...')
                             }}
                             disabled={monitorResults.length === 0}
                             className="btn-secondary"
-                            title="仅清空监控结果列表，不影响监控状态"
+                            title="清空监控结果列表，监控将继续运行"
                         >
                             清空结果
-                        </button>
-                        <button 
-                            onClick={() => {
-                                setMonitorResults([])
-                                setRequestCounter(0)
-                                setLastCheckTime('')
-                                setNotification('')
-                            }}
-                            disabled={requestCounter === 0 && !lastCheckTime && monitorResults.length === 0}
-                            className="btn-secondary"
-                            title="清空所有结果和监控统计信息"
-                        >
-                            重置所有
                         </button>
                         <button 
                             onClick={handleManualCheck}
@@ -759,7 +755,7 @@ const IPhoneTool = () => {
                     <h3>库存监控结果</h3>
                     <div className="results-list">
                         {monitorResults.slice(0, 10).map((result, index) => (
-                            <div key={`${result.productNo}-${result.timestamp}`} className={`result-item ${result.available ? 'available' : 'unavailable'}`}>
+                            <div key={`${result.productNo}-${result.timestamp}-${index}`} className={`result-item ${result.available ? 'available' : 'unavailable'}`}>
                                 <div className="result-header">
                                     <strong>{result.name}</strong>
                                     <span className={`status ${result.available ? 'available' : 'unavailable'}`}>
