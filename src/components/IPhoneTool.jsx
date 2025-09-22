@@ -173,16 +173,6 @@ const IPhoneTool = () => {
     // 解析库存数据 - 重新设计解析逻辑
     const parseStockData = (stockData, pickupData, productNo) => {
         try {
-            console.log('=== 重新解析苹果API数据 ===');
-            console.log('Product No:', productNo);
-            
-            // 首先打印完整的数据结构用于分析
-            if (stockData) {
-                console.log('📦 Stock API 完整响应:', JSON.stringify(stockData, null, 2));
-            }
-            if (pickupData) {
-                console.log('🚚 Pickup API 完整响应:', JSON.stringify(pickupData, null, 2));
-            }
             
             const storesMap = new Map()
             
