@@ -185,7 +185,7 @@ const IPhoneTool = () => {
             
             stockStores.forEach((store, index) => {
                 console.log(`\n--- Stock门店 ${index + 1} ---`);
-                console.log('原始数据:', JSON.stringify(store, null, 2));
+                //console.log('原始数据:', JSON.stringify(store, null, 2));
                 
                 // 提取门店基础信息
                 const storeNumber = store.storeNumber
