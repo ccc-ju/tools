@@ -440,6 +440,7 @@ const IPhoneTool = () => {
 
     // 开始监控
     const startMonitoring = async () => {
+        console.log('🚀 开始监控');
         const productNo = getCurrentProductNo()
         if (!productNo) {
             setNotification('请选择要监控的产品')
@@ -450,12 +451,16 @@ const IPhoneTool = () => {
         setNotification('开始监控库存...')
 
         // 立即检查一次
+        console.log('📦 立即进行第一次检查');
         await checkCurrentProduct()
 
         // 设置定时检查
+        console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
         intervalRef.current = setInterval(async () => {
+            console.log('⏰ 定时器触发，执行检查');
             await checkCurrentProduct()
         }, interval * 1000)
+        console.log('📋 定时器ID:', intervalRef.current);
     }
 
     // 停止监控
@@ -494,72 +499,94 @@ const IPhoneTool = () => {
 
     // 检查当前选中的产品
     const checkCurrentProduct = async () => {
+        console.log('🔍 开始检查产品，监控状态:', isMonitoring);
         const productNo = getCurrentProductNo()
-        if (!productNo) return
+        if (!productNo) {
+            console.log('⚠️ 没有产品编号，跳过检查');
+            return
+        }
 
+        console.log('📊 更新请求计数器和时间');
         // 更新请求计数器和最后检查时间
-        setRequestCounter(prev => prev + 1)
-        setLastCheckTime(new Date().toLocaleString())
+        setRequestCounter(prev => {
+            console.log('📈 计数器从', prev, '增加到', prev + 1);
+            return prev + 1;
+        })
+        const checkTime = new Date().toLocaleString();
+        setLastCheckTime(checkTime)
+        console.log('⏰ 设置检查时间:', checkTime);
         setNotification('🔄 正在检查库存...')
 
-        const stockInfo = await checkStock(productNo)
-        const productName = `${selectedModel} ${selectedStorage} ${selectedColor}`
-        
-        const result = {
-            name: productName,
-            productNo,
-            ...stockInfo,
-            timestamp: new Date().getTime()
-        }
-        
-        setMonitorResults(prevResults => {
-            // 如果结果列表为空（比如刚清空），直接添加新结果
-            if (prevResults.length === 0) {
-                console.log('➕ 添加监控结果（结果列表为空）');
-                return [result]
+        try {
+            const stockInfo = await checkStock(productNo)
+            const productName = `${selectedModel} ${selectedStorage} ${selectedColor}`
+            
+            const result = {
+                name: productName,
+                productNo,
+                ...stockInfo,
+                timestamp: new Date().getTime()
             }
             
-            // 检查最近的结果是否是相同产品且时间太近（避免真正的重复）
-            const lastResult = prevResults[0] // 最新的结果
-            const isRecentDuplicate = lastResult && 
-                lastResult.name === result.name && 
-                lastResult.productNo === result.productNo &&
-                Math.abs(result.timestamp - lastResult.timestamp) < 3000 && // 3秒内且
-                lastResult.available === result.available // 状态也相同才算重复
+            console.log('📦 检查完成，结果:', result.available ? '有库存' : '无库存');
             
-            if (isRecentDuplicate) {
-                // 更新最新结果的时间戳，但不添加新项
-                console.log('🔄 更新最新结果时间戳，避免重复');
-                const updatedResults = [...prevResults]
-                updatedResults[0] = result // 更新第一个结果
-                return updatedResults
-            }
+            setMonitorResults(prevResults => {
+                console.log('📋 当前结果列表长度:', prevResults.length);
+                // 如果结果列表为空（比如刚清空），直接添加新结果
+                if (prevResults.length === 0) {
+                    console.log('➕ 添加监控结果（结果列表为空）');
+                    return [result]
+                }
+                
+                // 检查最近的结果是否是相同产品且时间太近（避免真正的重复）
+                const lastResult = prevResults[0] // 最新的结果
+                const isRecentDuplicate = lastResult && 
+                    lastResult.name === result.name && 
+                    lastResult.productNo === result.productNo &&
+                    Math.abs(result.timestamp - lastResult.timestamp) < 3000 && // 3秒内且
+                    lastResult.available === result.available // 状态也相同才算重复
+                
+                if (isRecentDuplicate) {
+                    // 更新最新结果的时间戳，但不添加新项
+                    console.log('🔄 更新最新结果时间戳，避免重复');
+                    const updatedResults = [...prevResults]
+                    updatedResults[0] = result // 更新第一个结果
+                    return updatedResults
+                }
+                
+                // 添加新结果，保留最近10条记录
+                const newResults = [result, ...prevResults].slice(0, 10)
+                console.log('➕ 添加新的监控结果');
+                return newResults
+            })
             
-            // 添加新结果，保留最近10条记录
-            const newResults = [result, ...prevResults].slice(0, 10)
-            console.log('➕ 添加新的监控结果');
-            return newResults
-        })
-        
-        // 更新通知状态
-        if (stockInfo.available) {
-            setNotification(`🎉 ${productName} 有库存了！`)
-            // 浏览器通知
-            if (Notification.permission === 'granted') {
-                new Notification('iPhone 库存提醒', {
-                    body: `${productName} 现在有库存了！`,
-                    icon: '/favicon.ico'
-                })
+            // 更新通知状态
+            if (stockInfo.available) {
+                setNotification(`🎉 ${productName} 有库存了！`)
+                // 浏览器通知
+                if (Notification.permission === 'granted') {
+                    new Notification('iPhone 库存提醒', {
+                        body: `${productName} 现在有库存了！`,
+                        icon: '/favicon.ico'
+                    })
+                }
+            } else {
+                // 确保在监控时显示检查完成的状态
+                const currentCount = requestCounter + 1 // 因为requestCounter还没有被更新到最新值
+                setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
             }
-        } else {
-            // 确保在监控时显示检查完成的状态
-            const currentCount = requestCounter + 1 // 因为requestCounter还没有被更新到最新值
-            setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
-        }
 
-        // 如果正在监控，启动倒计时
-        if (isMonitoring) {
-            startCountdown()
+            // 如果正在监控，启动倒计时
+            console.log('🔄 检查监控状态以决定是否启动倒计时:', isMonitoring);
+            if (isMonitoring) {
+                console.log('⏱️ 启动倒计时');
+                startCountdown()
+            } else {
+                console.log('⏹️ 未在监控中，不启动倒计时');
+            }
+        } catch (error) {
+            console.error('❌ 检查产品时出错:', error);
+            setNotification(`检查失败: ${error.message}`);
         }
     }
 
@@ -669,8 +696,11 @@ const IPhoneTool = () => {
                     <div className="button-group">
                         <button 
                             onClick={() => {
+                                console.log('🗑️ 清空结果被点击，当前监控状态:', isMonitoring);
+                                console.log('📋 当前定时器ID:', intervalRef.current);
                                 setMonitorResults([])
                                 setNotification('已清空监控结果，继续监控中...')
+                                console.log('✅ 结果已清空，监控应继续运行');
                             }}
                             disabled={monitorResults.length === 0}
                             className="btn-secondary"
