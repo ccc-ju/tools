@@ -456,11 +456,19 @@ const IPhoneTool = () => {
         isMonitoringRef.current = true // 同步更新ref状态
         setNotification('开始监控库存...')
 
+        // React严格模式下防止重复执行
+        let hasExecutedFirstCheck = false;
+        
         // 立即检查一次
         console.log('📦 立即进行第一次检查');
         
-        // 将第一次检查和定时器设置分开，避免异步竞争
         const performFirstCheck = async () => {
+            if (hasExecutedFirstCheck) {
+                console.log('⚠️ 首次检查已执行，跳过重复执行');
+                return;
+            }
+            hasExecutedFirstCheck = true;
+            
             try {
                 await checkCurrentProduct()
             } catch (error) {
@@ -469,7 +477,7 @@ const IPhoneTool = () => {
             }
         }
 
-        // 先执行第一次检查
+        // 执行第一次检查
         await performFirstCheck();
         
         // 检查监控是否仍然活跃（防止在首次检查时被停止）
@@ -478,26 +486,39 @@ const IPhoneTool = () => {
             return;
         }
 
-        // 设置定时检查 - 使用更简单直接的方式
+        // 设置定时检查 - 使用更健壮的方式
         console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
-        const timerId = setInterval(() => {
-            console.log(`⏰ 定时器触发 [${new Date().toLocaleTimeString()}] - 监控状态:`, isMonitoringRef.current);
-            
-            // 使用ref状态来判断是否继续执行
-            if (!isMonitoringRef.current) {
-                console.log('⚠️ 监控已停止，清理定时器');
-                clearInterval(timerId);
-                return;
-            }
-            
-            // 执行检查 - 直接调用，不依赖外部状态
-            checkCurrentProduct().catch(error => {
-                console.error('❌ 定时检查失败，但定时器继续:', error);
-                setNotification(`检查失败: ${error.message}`);
-            });
-        }, interval * 1000);
         
-        // 保存定时器ID
+        // 使用闭包来保持定时器的稳定性
+        const createTimer = () => {
+            return setInterval(() => {
+                const currentTime = new Date().toLocaleTimeString();
+                console.log(`⏰ 定时器触发 [${currentTime}] - 监控状态:`, isMonitoringRef.current);
+                
+                // 检查监控状态
+                if (!isMonitoringRef.current) {
+                    console.log('⚠️ 监控已停止，清理定时器');
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                    return;
+                }
+                
+                // 执行检查 - 确保错误隔离
+                console.log('🔍 定时器开始执行检查...');
+                checkCurrentProduct()
+                    .then(() => {
+                        console.log('✅ 定时检查完成');
+                    })
+                    .catch(error => {
+                        console.error('❌ 定时检查失败，但定时器继续:', error);
+                        setNotification(`检查失败: ${error.message}，监控继续`);
+                    });
+            }, interval * 1000);
+        };
+        
+        const timerId = createTimer();
         intervalRef.current = timerId;
         console.log('📋 定时器已启动，ID:', timerId);
     }
