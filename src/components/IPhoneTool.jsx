@@ -6,7 +6,11 @@ const IPhoneTool = () => {
     const [interval, setInterval] = useState(30) // 默认30秒
     const [notification, setNotification] = useState('')
     const [loading, setLoading] = useState(false)
+    const [lastCheckTime, setLastCheckTime] = useState('')
+    const [nextCheckCountdown, setNextCheckCountdown] = useState(0)
+    const [requestCounter, setRequestCounter] = useState(0)
     const intervalRef = useRef(null)
+    const countdownRef = useRef(null)
 
     // iPhone 17 产品列表 - 简化选择
     const products = {
@@ -461,13 +465,42 @@ const IPhoneTool = () => {
             clearInterval(intervalRef.current)
             intervalRef.current = null
         }
+        if (countdownRef.current) {
+            clearInterval(countdownRef.current)
+            countdownRef.current = null
+        }
+        setNextCheckCountdown(0)
         setNotification('已停止监控')
+    }
+
+    // 启动倒计时
+    const startCountdown = () => {
+        setNextCheckCountdown(interval)
+        
+        if (countdownRef.current) {
+            clearInterval(countdownRef.current)
+        }
+        
+        countdownRef.current = setInterval(() => {
+            setNextCheckCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(countdownRef.current)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
     }
 
     // 检查当前选中的产品
     const checkCurrentProduct = async () => {
         const productNo = getCurrentProductNo()
         if (!productNo) return
+
+        // 更新请求计数器和最后检查时间
+        setRequestCounter(prev => prev + 1)
+        setLastCheckTime(new Date().toLocaleString())
+        setNotification('🔄 正在检查库存...')
 
         const stockInfo = await checkStock(productNo)
         const productName = `${selectedModel} ${selectedStorage} ${selectedColor}`
@@ -501,7 +534,7 @@ const IPhoneTool = () => {
             return newResults
         })
         
-        // 如果有库存，发送通知
+        // 更新通知状态
         if (stockInfo.available) {
             setNotification(`🎉 ${productName} 有库存了！`)
             // 浏览器通知
@@ -511,6 +544,13 @@ const IPhoneTool = () => {
                     icon: '/favicon.ico'
                 })
             }
+        } else {
+            setNotification(`✅ 检查完成 - 暂无库存 (第 ${requestCounter} 次检查)`)
+        }
+
+        // 如果正在监控，启动倒计时
+        if (isMonitoring) {
+            startCountdown()
         }
     }
 
@@ -538,6 +578,9 @@ const IPhoneTool = () => {
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current)
+            }
+            if (countdownRef.current) {
+                clearInterval(countdownRef.current)
             }
         }
     }, [])
@@ -616,7 +659,11 @@ const IPhoneTool = () => {
                     
                     <div className="button-group">
                         <button 
-                            onClick={() => setMonitorResults([])}
+                            onClick={() => {
+                                setMonitorResults([])
+                                setRequestCounter(0)
+                                setLastCheckTime('')
+                            }}
                             disabled={monitorResults.length === 0}
                             className="btn-secondary"
                             title="清空所有结果"
@@ -652,6 +699,44 @@ const IPhoneTool = () => {
                 {notification && (
                     <div className={`notification ${notification.includes('🎉') ? 'success' : ''}`}>
                         {notification}
+                    </div>
+                )}
+                
+                {/* 监控状态显示 */}
+                {(isMonitoring || lastCheckTime || requestCounter > 0) && (
+                    <div className="monitoring-status">
+                        <div className="status-grid">
+                            {requestCounter > 0 && (
+                                <div className="status-item">
+                                    <span className="status-label">已检查次数:</span>
+                                    <span className="status-value">{requestCounter} 次</span>
+                                </div>
+                            )}
+                            {lastCheckTime && (
+                                <div className="status-item">
+                                    <span className="status-label">最后检查:</span>
+                                    <span className="status-value">{lastCheckTime}</span>
+                                </div>
+                            )}
+                            {isMonitoring && (
+                                <div className="status-item">
+                                    <span className="status-label">监控状态:</span>
+                                    <span className="status-value active">🟢 运行中</span>
+                                </div>
+                            )}
+                            {isMonitoring && nextCheckCountdown > 0 && (
+                                <div className="status-item">
+                                    <span className="status-label">下次检查:</span>
+                                    <span className="status-value countdown">{nextCheckCountdown}秒后</span>
+                                </div>
+                            )}
+                            {loading && (
+                                <div className="status-item">
+                                    <span className="status-label">请求状态:</span>
+                                    <span className="status-value loading">⏳ 请求中...</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
