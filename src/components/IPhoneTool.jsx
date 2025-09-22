@@ -661,14 +661,26 @@ const IPhoneTool = () => {
                         <button 
                             onClick={() => {
                                 setMonitorResults([])
-                                setRequestCounter(0)
-                                setLastCheckTime('')
+                                // 注意：不重置requestCounter和lastCheckTime，保持监控状态可见
                             }}
                             disabled={monitorResults.length === 0}
                             className="btn-secondary"
-                            title="清空所有结果"
+                            title="仅清空监控结果列表，不影响监控状态"
                         >
                             清空结果
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setMonitorResults([])
+                                setRequestCounter(0)
+                                setLastCheckTime('')
+                                setNotification('')
+                            }}
+                            disabled={requestCounter === 0 && !lastCheckTime && monitorResults.length === 0}
+                            className="btn-secondary"
+                            title="清空所有结果和监控统计信息"
+                        >
+                            重置所有
                         </button>
                         <button 
                             onClick={handleManualCheck}
@@ -703,9 +715,15 @@ const IPhoneTool = () => {
                 )}
                 
                 {/* 监控状态显示 */}
-                {(isMonitoring || lastCheckTime || requestCounter > 0) && (
+                {(isMonitoring || lastCheckTime || requestCounter > 0 || loading) && (
                     <div className="monitoring-status">
                         <div className="status-grid">
+                            {isMonitoring && (
+                                <div className="status-item">
+                                    <span className="status-label">监控状态:</span>
+                                    <span className="status-value active">🟢 运行中</span>
+                                </div>
+                            )}
                             {requestCounter > 0 && (
                                 <div className="status-item">
                                     <span className="status-label">已检查次数:</span>
@@ -716,12 +734,6 @@ const IPhoneTool = () => {
                                 <div className="status-item">
                                     <span className="status-label">最后检查:</span>
                                     <span className="status-value">{lastCheckTime}</span>
-                                </div>
-                            )}
-                            {isMonitoring && (
-                                <div className="status-item">
-                                    <span className="status-label">监控状态:</span>
-                                    <span className="status-value active">🟢 运行中</span>
                                 </div>
                             )}
                             {isMonitoring && nextCheckCountdown > 0 && (
