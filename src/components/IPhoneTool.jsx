@@ -447,6 +447,7 @@ const IPhoneTool = () => {
 
         // 清理旧的定时器
         if (intervalRef.current) {
+            console.log('🧹 清理旧的定时器:', intervalRef.current);
             clearInterval(intervalRef.current)
             intervalRef.current = null
         }
@@ -457,30 +458,48 @@ const IPhoneTool = () => {
 
         // 立即检查一次
         console.log('📦 立即进行第一次检查');
-        checkCurrentProduct().catch(error => {
-            console.error('❌ 首次检查失败:', error);
-            setNotification('首次检查失败，但监控继续');
-        });
+        
+        // 将第一次检查和定时器设置分开，避免异步竞争
+        const performFirstCheck = async () => {
+            try {
+                await checkCurrentProduct()
+            } catch (error) {
+                console.error('❌ 首次检查失败:', error);
+                setNotification('首次检查失败，但监控继续');
+            }
+        }
 
-        // 设置定时检查 - 不依赖闭包中的状态
+        // 先执行第一次检查
+        await performFirstCheck();
+        
+        // 检查监控是否仍然活跃（防止在首次检查时被停止）
+        if (!isMonitoringRef.current) {
+            console.log('⚠️ 首次检查后监控已停止，不设置定时器');
+            return;
+        }
+
+        // 设置定时检查 - 使用更简单直接的方式
         console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
-        intervalRef.current = setInterval(() => {
+        const timerId = setInterval(() => {
             console.log(`⏰ 定时器触发 [${new Date().toLocaleTimeString()}] - 监控状态:`, isMonitoringRef.current);
             
             // 使用ref状态来判断是否继续执行
             if (!isMonitoringRef.current) {
-                console.log('⚠️ 监控已停止，退出定时器');
+                console.log('⚠️ 监控已停止，清理定时器');
+                clearInterval(timerId);
                 return;
             }
             
-            // 执行检查 - 简化调用
+            // 执行检查 - 直接调用，不依赖外部状态
             checkCurrentProduct().catch(error => {
                 console.error('❌ 定时检查失败，但定时器继续:', error);
                 setNotification(`检查失败: ${error.message}`);
             });
         }, interval * 1000);
         
-        console.log('📋 定时器已启动，ID:', intervalRef.current);
+        // 保存定时器ID
+        intervalRef.current = timerId;
+        console.log('📋 定时器已启动，ID:', timerId);
     }
 
     // 停止监控
@@ -527,7 +546,7 @@ const IPhoneTool = () => {
 
     // 检查当前选中的产品
     const checkCurrentProduct = async () => {
-        console.log('🔍 检查开始 - 监控状态(ref):', isMonitoringRef.current, '定时器状态:', !!intervalRef.current);
+        console.log('🔍 检查开始 - 监控状态(ref):', isMonitoringRef.current);
         
         // 首先检查是否还在监控状态
         if (!isMonitoringRef.current) {
@@ -540,10 +559,6 @@ const IPhoneTool = () => {
             console.log('⚠️ 没有产品编号');
             return
         }
-
-        // 在开始检查时保存当前的定时器引用
-        const currentInterval = intervalRef.current;
-        console.log('💾 保存当前定时器引用:', !!currentInterval);
 
         // 更新计数器和时间
         setRequestCounter(prev => prev + 1)
@@ -594,26 +609,22 @@ const IPhoneTool = () => {
                 setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
             }
 
-            // 如果在监控中且无库存，继续倒计时
-            // 使用保存的定时器引用和ref状态来判断
-            console.log('🔍 检查是否需要启动倒计时');
-            console.log('  - 监控状态(ref):', isMonitoringRef.current);
-            console.log('  - 保存的定时器引用:', !!currentInterval);
-            console.log('  - 当前定时器引用:', !!intervalRef.current);
+            // 如果在监控中且无库存，启动倒计时
+            // 不再依赖定时器引用，只检查监控状态
+            console.log('🔍 检查是否需要启动倒计时 - 监控状态(ref):', isMonitoringRef.current);
             
-            // 确保监控状态正确且定时器仍然存在
-            if (isMonitoringRef.current && (currentInterval || intervalRef.current)) {
+            if (isMonitoringRef.current) {
                 console.log('🔄 监控中，启动倒计时');
                 startCountdown()
             } else {
-                console.log('📋 非监控状态或定时器已丢失，不启动倒计时');
+                console.log('📋 非监控状态，不启动倒计时');
             }
         } catch (error) {
             console.error('❌ 检查失败:', error);
             setNotification(`检查失败: ${error.message}`);
             
             // 即使出错也要检查是否需要继续监控
-            if (isMonitoringRef.current && intervalRef.current) {
+            if (isMonitoringRef.current) {
                 console.log('🔄 检查失败但继续监控，启动倒计时');
                 startCountdown();
             }
