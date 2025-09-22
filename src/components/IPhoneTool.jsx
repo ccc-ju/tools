@@ -11,6 +11,7 @@ const IPhoneTool = () => {
     const [requestCounter, setRequestCounter] = useState(0)
     const intervalRef = useRef(null)
     const countdownRef = useRef(null)
+    const isMonitoringRef = useRef(false) // 使用ref保存监控状态，避免闭包问题
 
     // iPhone 17 产品列表 - 简化选择
     const products = {
@@ -451,6 +452,7 @@ const IPhoneTool = () => {
         }
 
         setIsMonitoring(true)
+        isMonitoringRef.current = true // 同步更新ref状态
         setNotification('开始监控库存...')
 
         // 立即检查一次
@@ -463,11 +465,11 @@ const IPhoneTool = () => {
         // 设置定时检查 - 不依赖闭包中的状态
         console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
         intervalRef.current = setInterval(() => {
-            console.log(`⏰ 定时器触发 [${new Date().toLocaleTimeString()}]`);
+            console.log(`⏰ 定时器触发 [${new Date().toLocaleTimeString()}] - 监控状态:`, isMonitoringRef.current);
             
-            // 检查 intervalRef 是否仍然存在（作为监控状态的指示）
-            if (!intervalRef.current) {
-                console.log('⚠️ 定时器已被清理，停止执行');
+            // 使用ref状态来判断是否继续执行
+            if (!isMonitoringRef.current) {
+                console.log('⚠️ 监控已停止，退出定时器');
                 return;
             }
             
@@ -485,6 +487,7 @@ const IPhoneTool = () => {
     const stopMonitoring = () => {
         console.log('🛭 停止监控，当前定时器ID:', intervalRef.current);
         setIsMonitoring(false)
+        isMonitoringRef.current = false // 同步更新ref状态，防止定时器继续执行
         
         // 先清理定时器
         if (intervalRef.current) {
@@ -573,9 +576,10 @@ const IPhoneTool = () => {
                 setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
             }
 
-            // 如果直接监控且无库存，继续倒计时
-            // 使用 intervalRef.current 来判断是否在监控中
-            if (intervalRef.current) {
+            // 如果在监控中且无库存，继续倒计时
+            // 使用ref状态来判断是否继续执行
+            console.log('🔍 检查是否需要启动倒计时 - 监控状态(ref):', isMonitoringRef.current, '定时器状态:', !!intervalRef.current);
+            if (isMonitoringRef.current && intervalRef.current) {
                 console.log('🔄 监控中，启动倒计时');
                 startCountdown()
             } else {
