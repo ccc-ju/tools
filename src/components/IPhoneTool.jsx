@@ -460,18 +460,21 @@ const IPhoneTool = () => {
             setNotification('首次检查失败，但监控继续');
         });
 
-        // 设置定时检查 - 使用普通函数避免异步问题
+        // 设置定时检查 - 不依赖闭包中的状态
         console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
         intervalRef.current = setInterval(() => {
-            const currentTime = Date.now();
-            console.log(`⏰ 定时器触发 [${new Date(currentTime).toLocaleTimeString()}] - 监控状态:`, isMonitoring);
+            console.log(`⏰ 定时器触发 [${new Date().toLocaleTimeString()}]`);
             
-            // 使用更稳健的异步调用方式
-            Promise.resolve().then(async () => {
-                await checkCurrentProduct();
-            }).catch(error => {
-                console.error('❌ 定时检查发生错误，但监控继续:', error);
-                setNotification(`检查失败: ${error.message}，监控继续`);
+            // 检查 intervalRef 是否仍然存在（作为监控状态的指示）
+            if (!intervalRef.current) {
+                console.log('⚠️ 定时器已被清理，停止执行');
+                return;
+            }
+            
+            // 执行检查 - 简化调用
+            checkCurrentProduct().catch(error => {
+                console.error('❌ 定时检查失败，但定时器继续:', error);
+                setNotification(`检查失败: ${error.message}`);
             });
         }, interval * 1000);
         
@@ -480,15 +483,22 @@ const IPhoneTool = () => {
 
     // 停止监控
     const stopMonitoring = () => {
+        console.log('🛭 停止监控，当前定时器ID:', intervalRef.current);
         setIsMonitoring(false)
+        
+        // 先清理定时器
         if (intervalRef.current) {
             clearInterval(intervalRef.current)
             intervalRef.current = null
+            console.log('✅ 主定时器已清理');
         }
+        
         if (countdownRef.current) {
             clearInterval(countdownRef.current)
             countdownRef.current = null
+            console.log('✅ 倒计时定时器已清理');
         }
+        
         setNextCheckCountdown(0)
         setNotification('已停止监控')
     }
@@ -514,7 +524,7 @@ const IPhoneTool = () => {
 
     // 检查当前选中的产品
     const checkCurrentProduct = async () => {
-        console.log('🔍 检查开始 - 监控状态:', isMonitoring);
+        console.log('🔍 检查开始 - 定时器状态:', !!intervalRef.current);
         const productNo = getCurrentProductNo()
         if (!productNo) {
             console.log('⚠️ 没有产品编号');
@@ -563,9 +573,13 @@ const IPhoneTool = () => {
                 setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
             }
 
-            // 如果正在监控且无库存，继续倒计时
-            if (isMonitoring) {
+            // 如果直接监控且无库存，继续倒计时
+            // 使用 intervalRef.current 来判断是否在监控中
+            if (intervalRef.current) {
+                console.log('🔄 监控中，启动倒计时');
                 startCountdown()
+            } else {
+                console.log('📋 非监控状态，不启动倒计时');
             }
         } catch (error) {
             console.error('❌ 检查失败:', error);
