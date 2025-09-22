@@ -11,7 +11,6 @@ const IPhoneTool = () => {
     const [requestCounter, setRequestCounter] = useState(0)
     const intervalRef = useRef(null)
     const countdownRef = useRef(null)
-    const lastCheckRef = useRef(0) // 用于检测定时器是否正常工作
 
     // iPhone 17 产品列表 - 简化选择
     const products = {
@@ -448,28 +447,36 @@ const IPhoneTool = () => {
             return
         }
 
+        // 清理旧的定时器
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+        }
+
         setIsMonitoring(true)
         setNotification('开始监控库存...')
 
         // 立即检查一次
         console.log('📦 立即进行第一次检查');
-        try {
-            await checkCurrentProduct()
-        } catch (error) {
+        checkCurrentProduct().catch(error => {
             console.error('❌ 首次检查失败:', error);
-        }
+            setNotification('首次检查失败，但监控继续');
+        });
 
-        // 设置定时检查 - 使用更安全的定时器
+        // 设置定时检查 - 使用普通函数避免异步问题
         console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
         intervalRef.current = setInterval(() => {
-            console.log('⏰ 定时器触发，执行检查');
-            // 使用 Promise 包装避免异步错误影响定时器
+            const currentTime = Date.now();
+            console.log(`⏰ 定时器触发 [${new Date(currentTime).toLocaleTimeString()}] - 监控状态:`, isMonitoring);
+            
+            // 直接调用异步函数，使用 catch 捕获错误
             checkCurrentProduct().catch(error => {
                 console.error('❌ 定时检查失败:', error);
-                setNotification('检查失败，但监控继续运行');
+                setNotification(`检查失败: ${error.message}`);
             });
-        }, interval * 1000)
-        console.log('📋 定时器ID:', intervalRef.current);
+        }, interval * 1000);
+        
+        console.log('📋 定时器已启动，ID:', intervalRef.current);
     }
 
     // 停止监控
@@ -508,9 +515,6 @@ const IPhoneTool = () => {
 
     // 检查当前选中的产品
     const checkCurrentProduct = async () => {
-        const now = Date.now();
-        lastCheckRef.current = now; // 记录检查时间
-        
         console.log('🔍 检查开始 - 监控状态:', isMonitoring);
         const productNo = getCurrentProductNo()
         if (!productNo) {
@@ -536,27 +540,9 @@ const IPhoneTool = () => {
             
             console.log('📦 检查完成:', result.available ? '有库存' : '无库存');
             
-            setMonitorResults(prevResults => {
-                // 简化的去重逻辑：只检查最新一条记录
-                if (prevResults.length > 0) {
-                    const lastResult = prevResults[0];
-                    const timeDiff = Math.abs(result.timestamp - lastResult.timestamp);
-                    
-                    // 只有在非常近的时间内（<2秒）且是相同产品和状态才视为重复
-                    if (timeDiff < 2000 && 
-                        lastResult.productNo === result.productNo && 
-                        lastResult.available === result.available) {
-                        console.log('🔄 更新重复记录');
-                        const updated = [...prevResults];
-                        updated[0] = result;
-                        return updated;
-                    }
-                }
-                
-                // 添加新记录
-                console.log('➕ 添加新记录');
-                return [result, ...prevResults].slice(0, 10);
-            });
+            // 按照用户建议：每次都清空列表然后添加新结果，避免重复问题
+            console.log('🗑️ 清空当前列表并添加新结果');
+            setMonitorResults([result]);
             
             // 更新通知状态
             if (stockInfo.available) {
@@ -614,45 +600,6 @@ const IPhoneTool = () => {
             }
         }
     }, [])
-
-    // 监控健康检查 - 检测定时器是否停止工作
-    useEffect(() => {
-        let healthCheckTimer;
-        
-        if (isMonitoring) {
-            console.log('👩‍⚕️ 启动监控健康检查');
-            healthCheckTimer = setInterval(() => {
-                const now = Date.now();
-                const timeSinceLastCheck = now - lastCheckRef.current;
-                const expectedInterval = interval * 1000;
-                
-                // 如果超过预期间隔1.5倍时间没有检查，认为定时器异常
-                if (timeSinceLastCheck > expectedInterval * 1.5) {
-                    console.warn('⚠️ 检测到定时器异常，尝试重启');
-                    
-                    // 重启定时器
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                    }
-                    
-                    intervalRef.current = setInterval(() => {
-                        console.log('⏰ 重启定时器触发');
-                        checkCurrentProduct().catch(error => {
-                            console.error('❌ 重启后检查失败:', error);
-                        });
-                    }, interval * 1000);
-                    
-                    console.log('✅ 定时器已重启');
-                }
-            }, 5000); // 每5秒检查一次
-        }
-        
-        return () => {
-            if (healthCheckTimer) {
-                clearInterval(healthCheckTimer);
-            }
-        };
-    }, [isMonitoring, interval])
 
     return (
         <div className="tool-container">
