@@ -84,7 +84,14 @@ const IPhoneTool = () => {
 
     // 获取当前选中的产品编号
     const getCurrentProductNo = () => {
-        return products[selectedModel]?.[selectedStorage]?.[selectedColor] || ''
+        const productNo = products[selectedModel]?.[selectedStorage]?.[selectedColor] || ''
+        console.log('📍 获取产品编号:', {
+            selectedModel,
+            selectedStorage, 
+            selectedColor,
+            productNo
+        });
+        return productNo;
     }
 
     // 检查库存 - 真实API调用
@@ -469,10 +476,12 @@ const IPhoneTool = () => {
             const currentTime = Date.now();
             console.log(`⏰ 定时器触发 [${new Date(currentTime).toLocaleTimeString()}] - 监控状态:`, isMonitoring);
             
-            // 直接调用异步函数，使用 catch 捕获错误
-            checkCurrentProduct().catch(error => {
-                console.error('❌ 定时检查失败:', error);
-                setNotification(`检查失败: ${error.message}`);
+            // 使用更稳健的异步调用方式
+            Promise.resolve().then(async () => {
+                await checkCurrentProduct();
+            }).catch(error => {
+                console.error('❌ 定时检查发生错误，但监控继续:', error);
+                setNotification(`检查失败: ${error.message}，监控继续`);
             });
         }, interval * 1000);
         
@@ -546,7 +555,7 @@ const IPhoneTool = () => {
             
             // 更新通知状态
             if (stockInfo.available) {
-                setNotification(`🎉 ${productName} 有库存了！`)
+                setNotification(`🎉 ${productName} 有库存了！自动停止监控。`)
                 // 浏览器通知
                 if (Notification.permission === 'granted') {
                     new Notification('iPhone 库存提醒', {
@@ -554,13 +563,17 @@ const IPhoneTool = () => {
                         icon: '/favicon.ico'
                     })
                 }
+                // 有库存时自动停止监控
+                console.log('🎉 检测到有库存，自动停止监控');
+                stopMonitoring();
+                return; // 直接返回，不再启动倒计时
             } else {
                 // 确保在监控时显示检查完成的状态
                 const currentCount = requestCounter + 1 // 因为requestCounter还没有被更新到最新值
                 setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
             }
 
-            // 如果正在监控，启动倒计时
+            // 如果正在监控且无库存，继续倒计时
             if (isMonitoring) {
                 startCountdown()
             }
@@ -613,7 +626,16 @@ const IPhoneTool = () => {
                         <label>型号:</label>
                         <select 
                             value={selectedModel} 
-                            onChange={(e) => setSelectedModel(e.target.value)}
+                            onChange={(e) => {
+                                console.log('🗑️ 更改型号为:', e.target.value);
+                                setSelectedModel(e.target.value);
+                                // 重置容量和颜色选择
+                                const newModelProducts = products[e.target.value] || {};
+                                const firstStorage = Object.keys(newModelProducts)[0];
+                                const firstColor = firstStorage ? Object.keys(newModelProducts[firstStorage])[0] : '';
+                                setSelectedStorage(firstStorage || '256G');
+                                setSelectedColor(firstColor || '天蓝色');
+                            }}
                             disabled={isMonitoring}
                         >
                             {Object.keys(products).map(model => (
@@ -626,7 +648,14 @@ const IPhoneTool = () => {
                         <label>容量:</label>
                         <select 
                             value={selectedStorage} 
-                            onChange={(e) => setSelectedStorage(e.target.value)}
+                            onChange={(e) => {
+                                console.log('🗑️ 更改容量为:', e.target.value);
+                                setSelectedStorage(e.target.value);
+                                // 重置颜色选择
+                                const storageColors = products[selectedModel]?.[e.target.value] || {};
+                                const firstColor = Object.keys(storageColors)[0];
+                                setSelectedColor(firstColor || '天蓝色');
+                            }}
                             disabled={isMonitoring}
                         >
                             {Object.keys(products[selectedModel] || {}).map(storage => (
@@ -639,7 +668,10 @@ const IPhoneTool = () => {
                         <label>颜色:</label>
                         <select 
                             value={selectedColor} 
-                            onChange={(e) => setSelectedColor(e.target.value)}
+                            onChange={(e) => {
+                                console.log('🗑️ 更改颜色为:', e.target.value);
+                                setSelectedColor(e.target.value);
+                            }}
                             disabled={isMonitoring}
                         >
                             {Object.keys(products[selectedModel]?.[selectedStorage] || {}).map(color => (
@@ -698,6 +730,7 @@ const IPhoneTool = () => {
                                 onClick={startMonitoring}
                                 disabled={loading || !getCurrentProductNo()}
                                 className="btn-primary"
+                                title={!getCurrentProductNo() ? '请选择完整的产品配置' : '开始监控库存'}
                             >
                                 开始监控
                             </button>
