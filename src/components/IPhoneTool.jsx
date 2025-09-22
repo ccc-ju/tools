@@ -93,8 +93,8 @@ const IPhoneTool = () => {
             console.log('开始请求苹果API...')
             
             try {
-                // 使用Vite代理请求库存信息
-                const stockUrl = `/api/stock/?fae=true&pl=true&mts.0=regular&mts.1=compact&parts.0=${productNo}&searchNearby=true&store=R409`
+                // 构建API URL - 兼容开发环境和生产环境
+                const stockUrl = `/api/stock?fae=true&pl=true&mts.0=regular&mts.1=compact&parts.0=${productNo}&searchNearby=true&store=R409`
                 console.log('请求库存信息:', stockUrl)
                 
                 const stockResponse = await fetch(stockUrl, {
@@ -113,7 +113,7 @@ const IPhoneTool = () => {
                 }
                 
                 // 请求取货信息
-                const pickupUrl = `/api/pickup/?fae=true&mts.0=regular&mts.1=compact&searchNearby=true&store=R409&product=${productNo}`
+                const pickupUrl = `/api/pickup?fae=true&mts.0=regular&mts.1=compact&searchNearby=true&store=R409&product=${productNo}`
                 console.log('请求取货信息:', pickupUrl)
                 
                 const pickupResponse = await fetch(pickupUrl, {
@@ -133,12 +133,12 @@ const IPhoneTool = () => {
                 
             } catch (requestError) {
                 console.error('请求失败:', requestError)
-                throw new Error(`请求苹果API失败: ${requestError.message}。请检查网络连接或代理配置。`)
+                throw new Error(`请求苹果API失败: ${requestError.message}。请检查网络连接。`)
             }
             
             // 检查是否有数据返回
             if (!stockData && !pickupData) {
-                throw new Error('无法获取苹果库存数据，请检查网络连接或重新启动开发服务器')
+                throw new Error('无法获取苹果库存数据，请检查网络连接')
             }
             
             // 解析库存信息
@@ -753,11 +753,11 @@ const IPhoneTool = () => {
                         <li>🔄 <strong>自动监控</strong>：定时检查库存，有库存时自动通知</li>
                         <li>🗑️ <strong>清空结果</strong>：清除所有显示的监控结果</li>
                     </ul>
-                    <p>需要服务器端代理支持：</p>
+                    <p>技术实现：</p>
                     <ul>
-                        <li>部署代理服务在 <code>/api/proxy</code> 路径</li>
-                        <li>传递必要的 Headers 和 Cookies</li>
-                        <li>如果代理不可用，会显示连接错误</li>
+                        <li>开发环境：使用 Vite 代理转发请求</li>
+                        <li>生产环境：使用 Cloudflare Functions 代理</li>
+                        <li>直接调用苹果香港官网API获取实时数据</li>
                     </ul>
                 </div>
                 <p className="warning">
