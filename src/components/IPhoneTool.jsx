@@ -12,6 +12,33 @@ const IPhoneTool = () => {
     const intervalRef = useRef(null)
     const countdownRef = useRef(null)
     const isMonitoringRef = useRef(false) // 使用ref保存监控状态，避免闭包问题
+    const currentIntervalRef = useRef(30) // 保存当前使用的间隔时间，初始化为30秒
+    
+    // 仅在interval有有效值时才更新ref，避免undefined覆盖有效值
+    if (interval && interval !== undefined && !isNaN(interval) && interval > 0) {
+        if (currentIntervalRef.current !== interval) {
+            currentIntervalRef.current = interval;
+            console.log('🔄 更新 currentIntervalRef 为:', interval, '秒');
+        }
+    } else {
+        // 如果interval无效，确保ref有一个合理的默认值
+        if (!currentIntervalRef.current || currentIntervalRef.current === undefined) {
+            currentIntervalRef.current = 30;
+            console.log('⚠️ interval无效，设置 currentIntervalRef 默认值为: 30秒');
+        }
+    }
+    
+    // 使用useEffect监听interval状态变化，但只在有效时更新ref
+    useEffect(() => {
+        if (interval && interval !== undefined && !isNaN(interval) && interval > 0) {
+            if (currentIntervalRef.current !== interval) {
+                currentIntervalRef.current = interval;
+                console.log('🔄 useEffect同步间隔到ref:', interval, '秒');
+            }
+        } else {
+            console.log('⚠️ useEffect检测到interval无效:', interval, '，保持ref值:', currentIntervalRef.current);
+        }
+    }, [interval]);
 
     // iPhone 17 产品列表 - 简化选择
     const products = {
@@ -86,12 +113,12 @@ const IPhoneTool = () => {
     // 获取当前选中的产品编号
     const getCurrentProductNo = () => {
         const productNo = products[selectedModel]?.[selectedStorage]?.[selectedColor] || ''
-        console.log('📍 获取产品编号:', {
-            selectedModel,
-            selectedStorage, 
-            selectedColor,
-            productNo
-        });
+        // console.log('📍 获取产品编号:', {
+        //     selectedModel,
+        //     selectedStorage, 
+        //     selectedColor,
+        //     productNo
+        // });
         return productNo;
     }
 
@@ -438,23 +465,59 @@ const IPhoneTool = () => {
 
     // 开始监控
     const startMonitoring = async () => {
-        console.log('🚀 开始监控');
+        console.log('🚀 开始监控，当前状态检查:');
+        console.log('- interval 状态:', interval, '(类型:', typeof interval, ')');
+        console.log('- currentIntervalRef.current:', currentIntervalRef.current, '(类型:', typeof currentIntervalRef.current, ')');
+        console.log('- isMonitoring:', isMonitoring);
+        
         const productNo = getCurrentProductNo()
         if (!productNo) {
             setNotification('请选择要监控的产品')
             return
         }
 
+        // 强制停止之前的监控（完全清理状态）
+        console.log('🧹 强制清理所有旧状态和定时器');
+        
+        // 先设置状态为停止，确保所有正在运行的定时器能正确退出
+        isMonitoringRef.current = false;
+        
         // 清理旧的定时器
         if (intervalRef.current) {
-            console.log('🧹 清理旧的定时器:', intervalRef.current);
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
+            console.log('🧹 清理旧的主定时器:', intervalRef.current);
+            clearTimeout(intervalRef.current);
+            intervalRef.current = null;
         }
+        
+        if (countdownRef.current) {
+            console.log('🧹 清理旧的倒计时定时器:', countdownRef.current);
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+        }
+        
+        // 等待一小段时间确保异步操作完成
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        setIsMonitoring(true)
-        isMonitoringRef.current = true // 同步更新ref状态
-        setNotification('开始监控库存...')
+        // 重置所有监控状态和计数器（基于记忆经验：停止监控后再次启动时，应主动清空已检查次数和最后检查时间）
+        console.log('🔄 重置所有监控状态，当前间隔:', interval, '秒');
+        setIsMonitoring(true);
+        isMonitoringRef.current = true; // 同步更新ref状态
+        setRequestCounter(0); // 清空已检查次数
+        setLastCheckTime(''); // 清空最后检查时间
+        setNotification('🚀 正在启动监控，即将进行首次检查...');
+        setNextCheckCountdown(0); // 重置倒计时
+        setMonitorResults([]); // 清空之前的监控结果
+        
+        // 保存当前间隔时间到 ref 中（应用记忆中的多重 fallback 机制）
+        let effectiveInterval = interval;
+        if (!effectiveInterval || effectiveInterval === undefined || isNaN(effectiveInterval) || effectiveInterval <= 0) {
+            effectiveInterval = currentIntervalRef.current;
+        }
+        if (!effectiveInterval || effectiveInterval === undefined || isNaN(effectiveInterval) || effectiveInterval <= 0) {
+            effectiveInterval = 30; // 最终的fallback
+        }
+        currentIntervalRef.current = effectiveInterval;
+        console.log('✅ 已重置监控状态：已检查次数=0，最后检查时间=空，结果列表已清空，间隔设置为:', effectiveInterval, '秒，保存到ref:', currentIntervalRef.current);
 
         // React严格模式下防止重复执行
         let hasExecutedFirstCheck = false;
@@ -470,104 +533,173 @@ const IPhoneTool = () => {
             hasExecutedFirstCheck = true;
             
             try {
-                await checkCurrentProduct()
+                await checkCurrentProduct(true); // 传递 isFirstCheck 标记
             } catch (error) {
                 console.error('❌ 首次检查失败:', error);
-                setNotification('首次检查失败，但监控继续');
+                setNotification('⚠️ 首次检查失败，但监控将继续运行');
             }
         }
 
         // 执行第一次检查
         await performFirstCheck();
         
-        // 检查监控是否仍然活跃（防止在首次检查时被停止）
+        // 检查监控是否仍然活跃（防止在首次检查时被停止或发现库存）
         if (!isMonitoringRef.current) {
             console.log('⚠️ 首次检查后监控已停止，不设置定时器');
             return;
         }
 
-        // 设置定时检查 - 使用更健壮的方式
-        console.log(`⏰ 设置定时器，间隔: ${interval}秒`);
+        // 设置定时检查 - 只在首次检查完成且监控仍活跃时设置
+        console.log(`⏰ 首次检查完成，设置定时器，间隔: ${interval}秒`);
         
-        // 使用闭包来保持定时器的稳定性
-        const createTimer = () => {
-            return setInterval(() => {
-                const currentTime = new Date().toLocaleTimeString();
-                console.log(`⏰ 定时器触发 [${currentTime}] - 监控状态:`, isMonitoringRef.current);
-                
-                // 检查监控状态
-                if (!isMonitoringRef.current) {
-                    console.log('⚠️ 监控已停止，清理定时器');
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                        intervalRef.current = null;
+        // 保存当前间隔时间到闭包中，避免作用域问题
+        const checkInterval = currentIntervalRef.current || interval || 30; // 应用多重 fallback
+        console.log('📋 保存检查间隔:', checkInterval, '秒，已保存到 ref:', currentIntervalRef.current);
+        
+        const scheduleNextCheck = (currentInterval) => {
+            // 应用记忆中的多重 fallback 机制，确保间隔参数有效
+            let actualInterval = currentInterval;
+            console.log('🔧 scheduleNextCheck 参数检查开始 - 传入:', currentInterval, 'ref保存:', currentIntervalRef.current, 'state:', interval);
+            
+            if (!actualInterval || actualInterval === undefined || isNaN(actualInterval) || actualInterval <= 0) {
+                console.log('⚠️ 传入参数无效，尝试使用 ref 值');
+                actualInterval = currentIntervalRef.current;
+            }
+            if (!actualInterval || actualInterval === undefined || isNaN(actualInterval) || actualInterval <= 0) {
+                console.log('⚠️ ref 值无效，尝试使用 state 值');
+                actualInterval = interval;
+            }
+            if (!actualInterval || actualInterval === undefined || isNaN(actualInterval) || actualInterval <= 0) {
+                console.error('⚠️ 所有间隔值都不有效，使用默认值 30 秒');
+                actualInterval = 30;
+                currentIntervalRef.current = 30;
+            }
+            
+            console.log('🔧 scheduleNextCheck 最终确定使用间隔:', actualInterval, '秒');
+            
+            // 双重检查监控状态
+            if (!isMonitoringRef.current) {
+                console.log('⚠️ 监控已停止，不再调度下次检查');
+                intervalRef.current = null;
+                return null;
+            }
+            
+            console.log('🔄 调度下次检查，启动倒计时，间隔:', actualInterval, '秒');
+            
+            // 设置倒计时显示
+            setNextCheckCountdown(actualInterval);
+            
+            // 清理旧的倒计时定时器
+            if (countdownRef.current) {
+                clearInterval(countdownRef.current);
+                countdownRef.current = null;
+            }
+            
+            // 启动倒计时定时器
+            countdownRef.current = setInterval(() => {
+                setNextCheckCountdown(prev => {
+                    if (!isMonitoringRef.current) {
+                        console.log('⚠️ 倒计时期间监控被停止');
+                        clearInterval(countdownRef.current);
+                        countdownRef.current = null;
+                        return 0;
                     }
+                    
+                    if (prev <= 1) {
+                        console.log('⏰ 倒计时结束，等待定时器触发');
+                        clearInterval(countdownRef.current);
+                        countdownRef.current = null;
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            
+            // 设置主检查定时器
+            const timeoutId = setTimeout(async () => {
+                const currentTime = new Date().toLocaleTimeString();
+                console.log(`⏰ 定时检查触发 [${currentTime}] - 监控状态:`, isMonitoringRef.current);
+                
+                // 再次检查监控状态
+                if (!isMonitoringRef.current) {
+                    console.log('⚠️ 定时器触发时监控已停止，退出检查');
+                    intervalRef.current = null;
                     return;
                 }
                 
-                // 执行检查 - 确保错误隔离
-                console.log('🔍 定时器开始执行检查...');
-                checkCurrentProduct()
-                    .then(() => {
-                        console.log('✅ 定时检查完成');
-                    })
-                    .catch(error => {
-                        console.error('❌ 定时检查失败，但定时器继续:', error);
+                try {
+                    console.log('🔍 开始执行定时检查...');
+                    await checkCurrentProduct(false); // 非首次检查
+                    console.log('✅ 定时检查完成');
+                } catch (error) {
+                    console.error('❌ 定时检查失败:', error);
+                    if (isMonitoringRef.current) {
                         setNotification(`检查失败: ${error.message}，监控继续`);
-                    });
-            }, interval * 1000);
+                    }
+                }
+                
+                // 检查是否需要调度下次检查 - 传递当前间隔值
+                if (isMonitoringRef.current) {
+                    console.log('📋 调度下次检查，使用间隔:', actualInterval, '秒');
+                    scheduleNextCheck(actualInterval);
+                } else {
+                    console.log('⚠️ 监控已停止，不再调度');
+                    intervalRef.current = null;
+                }
+            }, actualInterval * 1000);
+            
+            intervalRef.current = timeoutId;
+            console.log('📋 已调度下次检查，定时器ID:', timeoutId, '间隔:', actualInterval, '秒');
+            console.log('🔍 验证定时器ID保存:', intervalRef.current); // 验证保存是否成功
+            return timeoutId;
         };
         
-        const timerId = createTimer();
-        intervalRef.current = timerId;
-        console.log('📋 定时器已启动，ID:', timerId);
+        // 启动第一次调度 - 传递正确的间隔参数
+        console.log('🚀 准备启动监控循环，使用间隔:', currentIntervalRef.current, '秒');
+        const firstTimerId = scheduleNextCheck(currentIntervalRef.current);
+        console.log('🚀 监控循环已启动，首个定时器ID:', firstTimerId, '间隔:', currentIntervalRef.current, '秒');
     }
+
+
 
     // 停止监控
     const stopMonitoring = () => {
-        console.log('🛭 停止监控，当前定时器ID:', intervalRef.current);
-        setIsMonitoring(false)
-        isMonitoringRef.current = false // 同步更新ref状态，防止定时器继续执行
+        console.log('🛑 停止监控，当前定时器ID:', intervalRef.current, '监控状态:', isMonitoringRef.current);
         
-        // 先清理定时器
+        // 先更新状态，防止定时器继续执行
+        console.log('🚫 设置监控状态为停止');
+        setIsMonitoring(false);
+        isMonitoringRef.current = false; // 同步更新ref状态，防止定时器继续执行
+        
+        // 清理主定时器 - 基于记忆经验：使用clearTimeout清理定时器
         if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
+            console.log('🧹 清理主定时器:', intervalRef.current);
+            clearTimeout(intervalRef.current); // 使用clearTimeout清理setTimeout定时器
+            intervalRef.current = null;
             console.log('✅ 主定时器已清理');
+        } else {
+            console.log('⚠️ 主定时器已经为null，无需清理');
         }
         
+        // 清理倒计时定时器
         if (countdownRef.current) {
-            clearInterval(countdownRef.current)
-            countdownRef.current = null
+            console.log('🧹 清理倒计时定时器:', countdownRef.current);
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
             console.log('✅ 倒计时定时器已清理');
         }
         
-        setNextCheckCountdown(0)
-        setNotification('已停止监控')
+        // 重置倒计时显示
+        setNextCheckCountdown(0);
+        setNotification('🛑 已停止监控');
+        console.log('🏁 监控停止完成，所有定时器已清理，状态已重置，保持间隔:', currentIntervalRef.current, '秒');
     }
 
-    // 启动倒计时
-    const startCountdown = () => {
-        setNextCheckCountdown(interval)
-        
-        if (countdownRef.current) {
-            clearInterval(countdownRef.current)
-        }
-        
-        countdownRef.current = setInterval(() => {
-            setNextCheckCountdown(prev => {
-                if (prev <= 1) {
-                    clearInterval(countdownRef.current)
-                    return 0
-                }
-                return prev - 1
-            })
-        }, 1000)
-    }
+
 
     // 检查当前选中的产品
-    const checkCurrentProduct = async () => {
-        console.log('🔍 检查开始 - 监控状态(ref):', isMonitoringRef.current);
+    const checkCurrentProduct = async (isFirstCheck = false) => {
+        console.log(`🔍 检查开始 ${isFirstCheck ? '(首次检查)' : '(定时检查)'} - 监控状态(ref):`, isMonitoringRef.current);
         
         // 首先检查是否还在监控状态
         if (!isMonitoringRef.current) {
@@ -584,7 +716,7 @@ const IPhoneTool = () => {
         // 更新计数器和时间
         setRequestCounter(prev => prev + 1)
         setLastCheckTime(new Date().toLocaleString())
-        setNotification('🔄 正在检查库存...')
+        setNotification('🔍 正在检查库存情况，请稍候...')
 
         try {
             const stockInfo = await checkStock(productNo)
@@ -627,28 +759,34 @@ const IPhoneTool = () => {
             } else {
                 // 确保在监控时显示检查完成的状态
                 const currentCount = requestCounter + 1 // 因为requestCounter还没有被更新到最新值
-                setNotification(`✅ 检查完成 - 暂无库存 (第 ${currentCount} 次检查)`)
+                if (isMonitoringRef.current) {
+                    setNotification(`✅ 检查完成 - 暂无库存，继续监控中`)
+                } else {
+                    setNotification(`✅ 检查完成 - 暂无库存`)
+                }
             }
 
-            // 如果在监控中且无库存，启动倒计时
-            // 不再依赖定时器引用，只检查监控状态
-            console.log('🔍 检查是否需要启动倒计时 - 监控状态(ref):', isMonitoringRef.current);
+            // 只有在监控中且无库存且非首次检查时，才需要额外启动倒计时
+            // 但由于scheduleNextCheck已经处理了倒计时，这里只需要记录日志
+            console.log('🔍 检查是否需要启动倒计时 - 监控状态(ref):', isMonitoringRef.current, '是否首次检查:', isFirstCheck, '定时器ID:', intervalRef.current);
             
-            if (isMonitoringRef.current) {
-                console.log('🔄 监控中，启动倒计时');
-                startCountdown()
+            if (isFirstCheck) {
+                console.log('📋 首次检查完成，定时器将自然触发下次检查，无需额外倒计时');
+            } else if (!isMonitoringRef.current) {
+                console.log('⚠️ 监控已停止，不需倒计时');
+            } else if (!intervalRef.current) {
+                console.log('⚠️ 定时器已被清理，监控可能需要重新启动');
             } else {
-                console.log('📋 非监控状态，不启动倒计时');
+                console.log('📋 定时检查完成，倒计时已由scheduleNextCheck处理');
             }
         } catch (error) {
             console.error('❌ 检查失败:', error);
             setNotification(`检查失败: ${error.message}`);
             
             // 即使出错也要检查是否需要继续监控
-            if (isMonitoringRef.current) {
-                console.log('🔄 检查失败但继续监控，启动倒计时');
-                startCountdown();
-            }
+            // 由于scheduleNextCheck已经处理了倒计时，这里不需要额外处理
+            console.log('📋 检查失败，但监控继续，倒计时由scheduleNextCheck处理');
+
         }
     }
 
@@ -659,9 +797,10 @@ const IPhoneTool = () => {
             setNotification('请选择要检查的产品')
             return
         }
-        setNotification('正在检查库存...')
-        await checkCurrentProduct()
-        setNotification('检查完成')
+        setNotification('🔍 正在手动检查库存，请稍候...')
+        // 手动检查不影响监控流程，不启动倒计时
+        await checkCurrentProduct(true) // 手动检查视为“首次检查”类型，不启动倒计时
+        setNotification('✅ 手动检查完成')
     }
 
     // 请求通知权限
@@ -675,7 +814,7 @@ const IPhoneTool = () => {
     useEffect(() => {
         return () => {
             if (intervalRef.current) {
-                clearInterval(intervalRef.current)
+                clearTimeout(intervalRef.current) // 改为clearTimeout
             }
             if (countdownRef.current) {
                 clearInterval(countdownRef.current)
@@ -764,7 +903,12 @@ const IPhoneTool = () => {
                         检查间隔：
                         <select 
                             value={interval} 
-                            onChange={(e) => setInterval(Number(e.target.value))}
+                            onChange={(e) => {
+                                const newInterval = Number(e.target.value);
+                                setInterval(newInterval);
+                                currentIntervalRef.current = newInterval; // 立即更新 ref，不等待 useEffect
+                                console.log('🔄 用户更改间隔为:', newInterval, '秒，已同步到 ref:', currentIntervalRef.current);
+                            }}
                             disabled={isMonitoring}
                         >
                             <option value={10}>10秒</option>
@@ -779,7 +923,7 @@ const IPhoneTool = () => {
                             onClick={() => {
                                 console.log('🗑️ 清空结果 - 监控状态:', isMonitoring);
                                 setMonitorResults([])
-                                setNotification('已清空监控结果，继续监控中...')
+                                setNotification('🗄️ 已清空监控结果')
                             }}
                             disabled={monitorResults.length === 0}
                             className="btn-secondary"
@@ -842,12 +986,12 @@ const IPhoneTool = () => {
                                     <span className="status-value">{lastCheckTime}</span>
                                 </div>
                             )}
-                            {isMonitoring && nextCheckCountdown > 0 && (
+                            {/* {isMonitoring && nextCheckCountdown > 0 && (
                                 <div className="status-item">
                                     <span className="status-label">下次检查:</span>
                                     <span className="status-value countdown">{nextCheckCountdown}秒后</span>
                                 </div>
-                            )}
+                            )} */}
                             {loading && (
                                 <div className="status-item">
                                     <span className="status-label">请求状态:</span>
@@ -879,13 +1023,13 @@ const IPhoneTool = () => {
                                     ) : (
                                         <small>未获取到门店信息</small>
                                     )}
-                                    {result.debugInfo && (
+                                    {/* {result.debugInfo && (
                                         <small className="debug-info">
                                             API状态: 库存{result.debugInfo.stockApiStatus} | 取货{result.debugInfo.pickupApiStatus} | 
                                             门店数: {result.debugInfo.stockStoresCount}+{result.debugInfo.pickupStoresCount}={result.debugInfo.totalStoresFound} | 
                                             有库存: {result.debugInfo.availableStoresFound}
                                         </small>
-                                    )}
+                                    )} */}
                                     {result.error && (
                                         <small className="error">错误: {result.error}</small>
                                     )}

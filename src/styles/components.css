@@ -668,6 +668,43 @@
   font-weight: 500;
   border: 1px solid var(--blue);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 确保文本可读性 */
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* 默认状态 - 信息提示 */
+.notification:not(.success):not(.error):not(.warning) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border-color: #2563eb;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色模式下的通知样式 */
+[data-theme="dark"] .notification:not(.success):not(.error):not(.warning) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  color: #ffffff;
+  border-color: #1e40af;
+}
+
+/* 错误状态 */
+.notification.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border-color: #dc2626;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 警告状态 */
+.notification.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border-color: #d97706;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .notification.success {
