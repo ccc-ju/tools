@@ -146,9 +146,17 @@ const IPhoneTool = () => {
                 
                 if (stockResponse.ok) {
                     stockData = await stockResponse.json()
-                    console.log('Stock data received:', stockData)
+                    console.log('✅ Stock data received:', stockData)
                 } else {
-                    console.error('Stock request failed:', stockResponse.status, stockResponse.statusText)
+                    console.error('❌ Stock request failed:', stockResponse.status, stockResponse.statusText)
+                    // 尝试获取详细的错误信息
+                    try {
+                        const errorData = await stockResponse.json();
+                        console.error('📋 Stock API 详细错误:', errorData);
+                    } catch (e) {
+                        const errorText = await stockResponse.text();
+                        console.error('📋 Stock API 错误文本:', errorText);
+                    }
                 }
                 
                 // 请求取货信息
