@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import TimestampTool from './components/TimestampTool'
 import StringDiffTool from './components/StringDiffTool'
 import CoordinateTool from './components/CoordinateTool'
-import IPhoneTool from './components/IPhoneTool'
 
 function App() {
     const [activeTab, setActiveTab] = useState('ts')
@@ -17,8 +16,7 @@ function App() {
     const tabs = [
         { id: 'ts', label: '时间戳转换', component: TimestampTool },
         { id: 'diff', label: '字符串对比', component: StringDiffTool },
-        { id: 'coord', label: '坐标系转换', component: CoordinateTool },
-        { id: 'iphone', label: 'iPhone库存', component: IPhoneTool }
+        { id: 'coord', label: '坐标系转换', component: CoordinateTool }
     ]
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component
