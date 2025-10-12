@@ -715,7 +715,7 @@ function StringDiffTool() {
                         padding: '16px',
                         fontSize: '14px',
                         minHeight: '120px',
-                        background: '#f8f9fa'
+                        background: 'var(--input-readonly-bg)'
                     }}
                 />
             </div>
