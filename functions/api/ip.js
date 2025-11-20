@@ -3,17 +3,23 @@ export async function onRequest(context) {
     const { request } = context;
 
     // Get client IP from Cloudflare headers
-    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '';
+    let clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '';
+
+    // Check for 'ip' query parameter to override
+    const url = new URL(request.url);
+    const queryIp = url.searchParams.get('ip');
+    if (queryIp) {
+        clientIp = queryIp;
+    }
 
     // Construct the target URL
-    // If clientIp is available, query specific IP, otherwise ipwho.is will use the request IP (which would be the worker's IP)
-    // But wait, ipwho.is allows querying specific IP via path: /8.8.8.8
     let targetUrl = 'https://ipwho.is/';
 
     // Only append IP if it's not a private/reserved IP (common in local dev)
+    // And if it was passed via query param, we trust it (or let ipwho.is handle validation)
     const isPrivate = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('192.168.') || clientIp.startsWith('10.') || clientIp.startsWith('172.');
 
-    if (clientIp && !isPrivate) {
+    if (clientIp && (!isPrivate || queryIp)) {
         targetUrl += clientIp;
     }
 

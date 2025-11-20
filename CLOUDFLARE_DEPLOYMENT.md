@@ -126,7 +126,7 @@ dist/
 ## 🌐 API 代理架构
 
 ### 开发环境
-- 使用 Vite 代理 (`vite.config.js`) 转发到苹果API
+- 使用 Vite 代理 (`vite.config.js`)
 - 本地服务器地址：`http://localhost:8788`
 
 ### 生产环境（Cloudflare Pages）
