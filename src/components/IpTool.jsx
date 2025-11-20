@@ -10,7 +10,7 @@ function IpTool() {
         setLoading(true)
         setError(null)
         try {
-            const response = await fetch('https://ipwho.is/')
+            const response = await fetch('/api/ip')
             if (!response.ok) {
                 throw new Error('网络请求失败')
             }

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:frontend": "vite",
+    "dev": "wrangler pages dev -- npm run dev:frontend",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -16,6 +17,7 @@
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "wrangler": "^4.49.0"
   }
 }

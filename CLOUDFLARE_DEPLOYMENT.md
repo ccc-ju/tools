@@ -8,13 +8,11 @@
 ```
 functions/
 ├── api/
-│   ├── stock.js        # 苹果库存API代理
-│   └── pickup.js       # 苹果取货API代理
+│   ├── ip.js           # ip地址查询
 ```
 
 这些函数文件会自动部署为 Cloudflare Functions，提供以下API端点：
-- `/api/stock` - 库存查询代理
-- `/api/pickup` - 取货信息代理
+- `/api/ip` - ip地址查询
 
 ### 构建设置
 ```
@@ -129,7 +127,7 @@ dist/
 
 ### 开发环境
 - 使用 Vite 代理 (`vite.config.js`) 转发到苹果API
-- 本地服务器地址：`http://localhost:5173`
+- 本地服务器地址：`http://localhost:8788`
 
 ### 生产环境（Cloudflare Pages）
 - 使用 Cloudflare Functions 作为代理
