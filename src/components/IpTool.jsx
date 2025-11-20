@@ -29,11 +29,6 @@ function IpTool() {
             { url: 'https://v4.ident.me', type: 'text' }
         ]
 
-        // Try sources in parallel (race) or sequence? 
-        // Race might be faster but we want reliability. Let's try Promise.any equivalent or just loop.
-        // Since we want the first success, Promise.any is good but might not be supported in older browsers?
-        // Let's use a simple loop for compatibility and control, or Promise.any if environment supports it (modern browsers do).
-
         try {
             const promises = sources.map(async (source) => {
                 try {
@@ -103,18 +98,30 @@ function IpTool() {
                     throw new Error('无法获取 IP 信息，请检查网络连接')
                 }
             } else {
-                // Fetch details for detected IPs
+                // Immediately show IP addresses (without details)
                 if (v4Ip) {
-                    const data = await fetchIpDetails(v4Ip)
-                    if (data) setIpv4Data(data)
+                    setIpv4Data({ ip: v4Ip, success: true })
                 }
-                if (v6Ip) {
-                    // If v6 is same as v4 (unlikely but possible if API is weird), skip
-                    if (v6Ip !== v4Ip) {
-                        const data = await fetchIpDetails(v6Ip)
+                if (v6Ip && v6Ip !== v4Ip) {
+                    setIpv6Data({ ip: v6Ip, success: true })
+                }
+
+                // Mark initial loading as done (IP is shown)
+                setLoading(false)
+
+                // Then fetch details asynchronously
+                if (v4Ip) {
+                    fetchIpDetails(v4Ip).then(data => {
+                        if (data) setIpv4Data(data)
+                    })
+                }
+                if (v6Ip && v6Ip !== v4Ip) {
+                    fetchIpDetails(v6Ip).then(data => {
                         if (data) setIpv6Data(data)
-                    }
+                    })
                 }
+
+                return // Early return to skip the loading=false at the end
             }
 
         } catch (err) {
@@ -135,6 +142,8 @@ function IpTool() {
     const renderIpCard = (data, type) => {
         if (!data) return null
         const isV6 = type === 'IPv6'
+        const isLoadingDetails = data.ip && !data.country // Has IP but no details yet
+
         return (
             <div style={{ marginBottom: '24px', opacity: isV6 ? 0.8 : 1 }}>
                 <div className="flex" style={{ alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -149,34 +158,77 @@ function IpTool() {
                     <button className="btn small" onClick={() => handleCopy(data.ip)}>复制</button>
                 </div>
 
-                <div className="grid-2">
-                    <div>
-                        <div className="muted" style={{ marginBottom: '6px' }}>地理位置</div>
-                        <div style={{ fontSize: '16px', marginBottom: '12px' }}>
-                            {data.country} - {data.region} - {data.city}
-                        </div>
+                {isLoadingDetails ? (
+                    <div className="muted" style={{ fontSize: '14px', fontStyle: 'italic' }}>
+                        正在加载详细信息...
                     </div>
-                    <div>
-                        <div className="muted" style={{ marginBottom: '6px' }}>运营商</div>
-                        <div style={{ fontSize: '16px' }}>
-                            {data.connection?.isp || '-'}
+                ) : (
+                    <>
+                        <div className="grid-2">
+                            <div>
+                                <div className="muted" style={{ marginBottom: '6px' }}>地理位置</div>
+                                <div style={{ fontSize: '16px', marginBottom: '12px' }}>
+                                    {data.country} - {data.region} - {data.city}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="muted" style={{ marginBottom: '6px' }}>运营商</div>
+                                <div style={{ fontSize: '16px' }}>
+                                    {data.connection?.isp || '-'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Only show extra details for primary IP (IPv4) or if it's the only one */}
-                {(!isV6 || !ipv4Data) && (
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: '14px' }}>
-                            <div className="muted">经纬度:</div>
-                            <div>{data.latitude}, {data.longitude}</div>
-                            <div className="muted">时区:</div>
-                            <div>{data.timezone?.id} (UTC{data.timezone?.utc})</div>
-                            <div className="muted">ASN:</div>
-                            <div>{data.connection?.asn || '-'}</div>
-                        </div>
-                    </div>
+                        {/* Only show extra details for primary IP (IPv4) or if it's the only one */}
+                        {(!isV6 || !ipv4Data) && (
+                            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: '14px' }}>
+                                    <div className="muted">经纬度:</div>
+                                    <div>{data.latitude}, {data.longitude}</div>
+                                    <div className="muted">时区:</div>
+                                    <div>{data.timezone?.id} (UTC{data.timezone?.utc})</div>
+                                    <div className="muted">ASN:</div>
+                                    <div>{data.connection?.asn || '-'}</div>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
+            </div>
+        )
+    }
+
+    const renderExternalChecks = () => {
+        if (loading || (!ipv4Data && !ipv6Data)) return null
+
+        const primaryIp = ipv4Data?.ip || ipv6Data?.ip
+
+        return (
+            <div style={{ marginTop: '24px' }}>
+                <div className="muted" style={{ marginBottom: '12px', fontSize: '15px' }}>三方IP专业检测</div>
+                <div className="muted" style={{ marginBottom: '12px', fontSize: '13px' }}>
+                    点击下方链接跳转到专业平台查看详细报告
+                </div>
+                <div className="flex" style={{ gap: '10px', flexWrap: 'wrap' }}>
+                    <a
+                        href={`https://www.abuseipdb.com/check/${primaryIp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn"
+                        style={{ textDecoration: 'none' }}
+                    >
+                        📋 AbuseIPDB (黑名单查询)
+                    </a>
+                    <a
+                        href={`https://scamalytics.com/ip/${primaryIp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn"
+                        style={{ textDecoration: 'none' }}
+                    >
+                        🛡️ Scamalytics (欺诈分检测)
+                    </a>
+                </div>
             </div>
         )
     }
@@ -198,6 +250,8 @@ function IpTool() {
 
             {ipv4Data && renderIpCard(ipv4Data, 'IPv4')}
             {ipv6Data && renderIpCard(ipv6Data, 'IPv6')}
+
+            {renderExternalChecks()}
 
             {!ipv4Data && !ipv6Data && !loading && !error && (
                 <div className="muted" style={{ textAlign: 'center', padding: '20px' }}>

@@ -139,4 +139,4 @@ else
     echo "• 无 API 端点 (未找到 functions 目录)"
 fi
 echo ""
-echo -e "${GREEN}🚀 现在可以访问你的网站并测试 iPhone 库存监控功能！${NC}"
+echo -e "${GREEN}🚀 现在可以访问你的网站并测试功能！${NC}"
