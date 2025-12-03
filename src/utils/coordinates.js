@@ -74,22 +74,88 @@ function bd09ToGcj02(lng, lat) {
 // 主转换函数
 export function convertCoordinates(lng, lat, fromSys, toSys) {
   if (fromSys === toSys) return [lng, lat]
-  
+
   let result = [lng, lat]
-  
+
   // 先转换到GCJ02作为中间坐标系
   if (fromSys === 'WGS84') {
     result = wgs84ToGcj02(lng, lat)
   } else if (fromSys === 'BD09') {
     result = bd09ToGcj02(lng, lat)
   }
-  
+
   // 从GCJ02转换到目标坐标系
   if (toSys === 'WGS84') {
     result = gcj02ToWgs84(result[0], result[1])
   } else if (toSys === 'BD09') {
     result = gcj02ToBd09(result[0], result[1])
   }
-  
+
   return result
+}
+
+/**
+ * 使用 Haversine 公式计算两点之间的球面距离（精确方法）
+ * 注意：两个点必须使用相同的坐标系！
+ * 虽然计算本身使用WGS84椭球体参数，但对于同一坐标系内的点，结果是准确的
+ * 
+ * @param {number} lng1 - 第一个点的经度
+ * @param {number} lat1 - 第一个点的纬度
+ * @param {number} lng2 - 第二个点的经度
+ * @param {number} lat2 - 第二个点的纬度
+ * @returns {number} 距离（单位：米）
+ */
+export function calculateDistance(lng1, lat1, lng2, lat2) {
+  const EARTH_RADIUS = 6378137 // 地球半径（米），使用WGS84椭球体赤道半径
+
+  // 将角度转换为弧度
+  const rad = (angle) => angle * Math.PI / 180
+
+  const radLat1 = rad(lat1)
+  const radLat2 = rad(lat2)
+  const deltaLat = rad(lat2 - lat1)
+  const deltaLng = rad(lng2 - lng1)
+
+  // Haversine 公式
+  const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(radLat1) * Math.cos(radLat2) *
+    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  const distance = EARTH_RADIUS * c
+
+  return distance
+}
+
+/**
+ * 快速估算两点之间的距离（简化方法，适用于短距离）
+ * 注意：两个点必须使用相同的坐标系！
+ * 这个方法在几百公里范围内误差较小，计算速度更快
+ * 
+ * @param {number} lng1 - 第一个点的经度
+ * @param {number} lat1 - 第一个点的纬度
+ * @param {number} lng2 - 第二个点的经度
+ * @param {number} lat2 - 第二个点的纬度
+ * @returns {number} 距离（单位：米）
+ */
+export function calculateDistanceFast(lng1, lat1, lng2, lat2) {
+  // 纬度每度约111km
+  const LAT_PER_METER = 111000
+
+  // 计算中心纬度，用于计算经度系数
+  const avgLat = (lat1 + lat2) / 2
+  const rad = avgLat * Math.PI / 180
+
+  // 该纬度下经度每度对应的米数
+  const lngPerMeter = LAT_PER_METER * Math.cos(rad)
+
+  // 计算经纬度差值对应的米数
+  const dx = (lng2 - lng1) * lngPerMeter
+  const dy = (lat2 - lat1) * LAT_PER_METER
+
+  // 勾股定理计算直线距离
+  const distance = Math.sqrt(dx * dx + dy * dy)
+
+  return distance
 }

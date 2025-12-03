@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { copyWithFallback } from '../utils/clipboard'
-import { convertCoordinates } from '../utils/coordinates'
+import { convertCoordinates, calculateDistance, calculateDistanceFast } from '../utils/coordinates'
 
 function CoordinateTool() {
   const [sourceLng, setSourceLng] = useState('')
@@ -14,6 +14,14 @@ function CoordinateTool() {
   const [batchOutput, setBatchOutput] = useState('')
   const [batchSourceCoordSys, setBatchSourceCoordSys] = useState('WGS84')
   const [batchTargetCoordSys, setBatchTargetCoordSys] = useState('GCJ02')
+
+  // 距离计算相关状态
+  const [point1Lng, setPoint1Lng] = useState('')
+  const [point1Lat, setPoint1Lat] = useState('')
+  const [point2Lng, setPoint2Lng] = useState('')
+  const [point2Lat, setPoint2Lat] = useState('')
+  const [distanceResult, setDistanceResult] = useState('')
+  const [distanceFastResult, setDistanceFastResult] = useState('')
 
   const handleConvert = () => {
     const lng = parseFloat(sourceLng)
@@ -81,6 +89,57 @@ function CoordinateTool() {
     }
 
     setBatchOutput(results.join('\n'))
+  }
+
+  const handleCalculateDistance = () => {
+    const lng1 = parseFloat(point1Lng)
+    const lat1 = parseFloat(point1Lat)
+    const lng2 = parseFloat(point2Lng)
+    const lat2 = parseFloat(point2Lat)
+
+    if (isNaN(lng1) || isNaN(lat1) || isNaN(lng2) || isNaN(lat2)) {
+      setDistanceResult('请输入有效的经纬度')
+      setDistanceFastResult('')
+      return
+    }
+
+    if (lng1 < -180 || lng1 > 180 || lat1 < -90 || lat1 > 90 ||
+      lng2 < -180 || lng2 > 180 || lat2 < -90 || lat2 > 90) {
+      setDistanceResult('坐标范围错误')
+      setDistanceFastResult('经度[-180,180]，纬度[-90,90]')
+      return
+    }
+
+    try {
+      // 使用精确的Haversine公式
+      const distance = calculateDistance(lng1, lat1, lng2, lat2)
+      // 使用快速估算方法
+      const distanceFast = calculateDistanceFast(lng1, lat1, lng2, lat2)
+
+      // 格式化距离显示
+      const formatDistance = (dist) => {
+        if (dist < 1000) {
+          return `${dist.toFixed(2)} 米`
+        } else {
+          return `${(dist / 1000).toFixed(3)} 公里 (${dist.toFixed(2)} 米)`
+        }
+      }
+
+      setDistanceResult(formatDistance(distance))
+      setDistanceFastResult(formatDistance(distanceFast))
+    } catch (e) {
+      setDistanceResult('计算失败')
+      setDistanceFastResult(e.message)
+    }
+  }
+
+  const handleClearDistance = () => {
+    setPoint1Lng('')
+    setPoint1Lat('')
+    setPoint2Lng('')
+    setPoint2Lat('')
+    setDistanceResult('')
+    setDistanceFastResult('')
   }
 
   return (
@@ -196,6 +255,103 @@ function CoordinateTool() {
               <option value="GCJ02">GCJ02 - 高德/腾讯</option>
               <option value="BD09">BD09 - 百度地图</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '12px' }}>
+          <h2>📏 经纬度距离计算</h2>
+          <div className="flex">
+            <button className="btn" onClick={handleClearDistance}>清空</button>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(255, 193, 7, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 193, 7, 0.3)' }}>
+          <div style={{ fontSize: '14px', color: '#ff9800' }}>
+            ⚠️ <strong>重要提示：</strong>计算距离时，两个点必须使用<strong>相同的坐标系</strong>！
+          </div>
+          <div style={{ fontSize: '13px', color: '#666', marginTop: '6px' }}>
+            • 如果两个点的坐标系不同（如一个WGS84，一个GCJ02），会导致距离计算严重偏差（可能几百米）<br />
+            • 请先在上方"坐标系转换"中将它们转换为同一坐标系，再进行距离计算<br />
+            • 距离计算本身与坐标系无关，只要两点坐标系一致，结果就是准确的
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <div className="muted" style={{ marginBottom: '6px' }}>点 1 坐标</div>
+          <div className="row" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <input
+              value={point1Lng}
+              onChange={(e) => setPoint1Lng(e.target.value)}
+              placeholder="经度 (Longitude)"
+            />
+            <input
+              value={point1Lat}
+              onChange={(e) => setPoint1Lat(e.target.value)}
+              placeholder="纬度 (Latitude)"
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <div className="muted" style={{ marginBottom: '6px' }}>点 2 坐标</div>
+          <div className="row" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <input
+              value={point2Lng}
+              onChange={(e) => setPoint2Lng(e.target.value)}
+              placeholder="经度 (Longitude)"
+            />
+            <input
+              value={point2Lat}
+              onChange={(e) => setPoint2Lat(e.target.value)}
+              placeholder="纬度 (Latitude)"
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <button className="btn dark" onClick={handleCalculateDistance}>计算距离</button>
+        </div>
+
+        <div className="grid-2">
+          <div>
+            <div className="muted" style={{ marginBottom: '6px' }}>
+              🎯 精确计算 (Haversine公式)
+            </div>
+            <input
+              value={distanceResult}
+              readOnly
+              placeholder="距离结果"
+              style={{ fontWeight: '500', color: '#2196f3' }}
+            />
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              使用球面三角学精确计算，适用于任意距离
+            </div>
+          </div>
+          <div>
+            <div className="muted" style={{ marginBottom: '6px' }}>
+              ⚡ 快速估算 (平面近似)
+            </div>
+            <input
+              value={distanceFastResult}
+              readOnly
+              placeholder="距离结果"
+              style={{ fontWeight: '500', color: '#4caf50' }}
+            />
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              平面几何快速计算，适用于数百公里内短距离
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(33, 150, 243, 0.05)', borderRadius: '8px' }}>
+          <div style={{ fontSize: '13px', color: '#666' }}>
+            <strong>💡 算法说明：</strong><br />
+            • <strong>Haversine公式</strong>：考虑地球曲率的精确球面距离计算<br />
+            • <strong>平面近似</strong>：将地球局部视为平面，使用勾股定理快速计算<br />
+            • 对于几十公里内的短距离，两种方法结果非常接近<br />
+            • 距离越远，平面近似的误差会略微增大（但仍在可接受范围）
           </div>
         </div>
       </div>
