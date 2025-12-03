@@ -169,7 +169,7 @@ function TimestampTool() {
                         value={epochOutput}
                         readOnly
                         placeholder="转换结果"
-                        style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', background: '#f8f9fa' }}
+                        style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', background: 'var(--input-readonly-bg)' }}
                     />
                     <button
                         className="btn"
@@ -205,7 +205,7 @@ function TimestampTool() {
                         value={dateOutput}
                         readOnly
                         placeholder="转换结果"
-                        style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', background: '#f8f9fa' }}
+                        style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', background: 'var(--input-readonly-bg)' }}
                     />
                     <select style={{ padding: '12px 16px', borderRadius: '8px', minWidth: '100px' }}>
                         <option value="ms">毫秒(ms)</option>
