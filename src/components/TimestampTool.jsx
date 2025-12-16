@@ -113,26 +113,26 @@ function TimestampTool() {
             {/* 当前时间显示 */}
             <div style={{ marginBottom: '32px' }}>
                 <div className="muted" style={{ marginBottom: '12px', fontWeight: '500' }}>当前时间</div>
-                <div className="row" style={{ gridTemplateColumns: '1fr auto auto', gap: '16px', alignItems: 'center' }}>
+                <div className="timestamp-current-row">
                     <input
                         value={currentTime}
                         readOnly
                         style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px' }}
                     />
-                    <button
-                        className="btn"
-                        onClick={toggleTimer}
-                        style={{ padding: '10px 20px', borderRadius: '8px' }}
-                    >
-                        {isRunning ? '停止' : '启动'}
-                    </button>
-                    <button
-                        className="btn"
-                        onClick={() => copyWithFallback(currentTime)}
-                        style={{ padding: '10px 20px', borderRadius: '8px' }}
-                    >
-                        复制
-                    </button>
+                    <div className="timestamp-button-group">
+                        <button
+                            className="btn"
+                            onClick={toggleTimer}
+                        >
+                            {isRunning ? '停止' : '启动'}
+                        </button>
+                        <button
+                            className="btn"
+                            onClick={() => copyWithFallback(currentTime)}
+                        >
+                            复制
+                        </button>
+                    </div>
                 </div>
                 <div className="muted" style={{ marginTop: '8px', fontSize: '12px' }}>实时显示当前时间</div>
             </div>
@@ -143,7 +143,7 @@ function TimestampTool() {
                     <span style={{ fontSize: '18px' }}>⏰</span>
                     <span className="muted" style={{ fontWeight: '500', fontSize: '16px' }}>时间戳转日期时间</span>
                 </div>
-                <div className="row" style={{ gridTemplateColumns: '2fr auto 1fr 2fr auto', gap: '16px', alignItems: 'center' }}>
+                <div className="timestamp-convert-row epoch-to-date">
                     <input
                         value={epochInput}
                         onChange={(e) => setEpochInput(e.target.value)}
@@ -161,7 +161,7 @@ function TimestampTool() {
                     <button
                         className="btn dark"
                         onClick={convertEpochToDate}
-                        style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: '500' }}
+                        style={{ fontWeight: '500' }}
                     >
                         转换
                     </button>
@@ -171,13 +171,14 @@ function TimestampTool() {
                         placeholder="转换结果"
                         style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', background: 'var(--input-readonly-bg)' }}
                     />
-                    <button
-                        className="btn"
-                        onClick={() => copyWithFallback(epochOutput)}
-                        style={{ padding: '10px 20px', borderRadius: '8px' }}
-                    >
-                        复制
-                    </button>
+                    <div className="timestamp-button-group">
+                        <button
+                            className="btn"
+                            onClick={() => copyWithFallback(epochOutput)}
+                        >
+                            复制
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -187,7 +188,7 @@ function TimestampTool() {
                     <span style={{ fontSize: '18px' }}>📅</span>
                     <span className="muted" style={{ fontWeight: '500', fontSize: '16px' }}>日期时间转时间戳</span>
                 </div>
-                <div className="row" style={{ gridTemplateColumns: '2fr 1fr 2fr auto auto', gap: '16px', alignItems: 'center' }}>
+                <div className="timestamp-convert-row date-to-epoch">
                     <input
                         value={dateInput}
                         onChange={(e) => setDateInput(e.target.value)}
@@ -197,7 +198,7 @@ function TimestampTool() {
                     <button
                         className="btn dark"
                         onClick={convertDateToEpoch}
-                        style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: '500' }}
+                        style={{ fontWeight: '500' }}
                     >
                         转换
                     </button>
@@ -210,13 +211,14 @@ function TimestampTool() {
                     <select style={{ padding: '12px 16px', borderRadius: '8px', minWidth: '100px' }}>
                         <option value="ms">毫秒(ms)</option>
                     </select>
-                    <button
-                        className="btn"
-                        onClick={() => copyWithFallback(dateOutput)}
-                        style={{ padding: '10px 20px', borderRadius: '8px' }}
-                    >
-                        复制
-                    </button>
+                    <div className="timestamp-button-group">
+                        <button
+                            className="btn"
+                            onClick={() => copyWithFallback(dateOutput)}
+                        >
+                            复制
+                        </button>
+                    </div>
                 </div>
                 <div className="muted" style={{ marginTop: '8px', fontSize: '12px' }}>将输入的日期时间视为系统本地时区，转换为毫秒时间戳</div>
             </div>

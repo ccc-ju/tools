@@ -154,7 +154,7 @@ function CoordinateTool() {
 
         <div style={{ marginBottom: '16px' }}>
           <div className="muted" style={{ marginBottom: '6px' }}>原始坐标</div>
-          <div className="row" style={{ gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
+          <div className="coordinate-input-row">
             <div>
               <input
                 value={sourceLng}
@@ -198,7 +198,7 @@ function CoordinateTool() {
 
         <div>
           <div className="muted" style={{ marginBottom: '6px' }}>转换结果</div>
-          <div className="row" style={{ gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'center' }}>
+          <div className="coordinate-result-row">
             <input value={resultLng} readOnly placeholder="经度结果" />
             <input value={resultLat} readOnly placeholder="纬度结果" />
             <button className="btn" onClick={handleCopyResult}>复制</button>
