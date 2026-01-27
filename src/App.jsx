@@ -95,7 +95,7 @@ function App() {
                 {ActiveComponent && <ActiveComponent />}
             </section>
 
-            <footer>© {new Date().getFullYear()} – <a href="https://home.cjuju.us.kg/" target="_blank" rel="noopener noreferrer">Devin - juju</a></footer>
+            <footer>© {new Date().getFullYear()} – <a href="https://home.cjuju.us.kg/" target="_blank" rel="noopener noreferrer">Devin-juju</a></footer>
 
             {/* 全局回到顶部按钮 */}
             {showScrollToTop && (
