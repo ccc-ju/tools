@@ -26,12 +26,17 @@ function StringDiffTool() {
         const n = chars1.length
         const m = chars2.length
 
+        // 如果两个字符串长度相同，使用逐位对比（更直观的对比方式）
+        if (n === m) {
+            return alignedDiff(chars1, chars2)
+        }
+
         // 对于中等大小的字符串，使用优化的Myers算法
         if (totalLength > 10000) {
             return myersDiff(chars1, chars2)
         }
 
-        // 对于小字符串，使用原来的动态规划算法
+        // 对于长度不同的小字符串，使用动态规划算法
         const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0))
 
         for (let i = n - 1; i >= 0; i--) {
@@ -72,6 +77,21 @@ function StringDiffTool() {
             j++
         }
 
+        return result
+    }
+
+    // 逐位对齐对比（用于等长字符串）
+    const alignedDiff = (chars1, chars2) => {
+        const result = []
+        for (let i = 0; i < chars1.length; i++) {
+            if (chars1[i] === chars2[i]) {
+                result.push({ type: 'eq', char1: chars1[i], char2: chars2[i] })
+            } else {
+                // 同一位置不同的字符，标记为替换（先删后加）
+                result.push({ type: 'del', char1: chars1[i], char2: null })
+                result.push({ type: 'add', char1: null, char2: chars2[i] })
+            }
+        }
         return result
     }
 
@@ -462,7 +482,11 @@ function StringDiffTool() {
                     </span>
                 )
             } else {
-                // 不同部分：红色背景，可点击选择
+                // 不同部分：如果该侧没有内容，不显示任何东西
+                if (!text) {
+                    return null
+                }
+                // 有内容时显示红色背景，可点击选择
                 const isSelected = picked[group.key] === side
                 return (
                     <span
@@ -478,7 +502,7 @@ function StringDiffTool() {
                         }}
                         title={`点击选择${side === 'left' ? '左侧' : '右侧'}内容`}
                     >
-                        {text || <span style={{ opacity: 0.5, fontSize: '10px' }}>[空]</span>}
+                        {text}
                     </span>
                 )
             }
