@@ -49,7 +49,8 @@
   - Scamalytics（欺诈分检测）
 
 ### 🎨 界面特性
-- 🌓 深色/浅色主题切换
+- � 中英文双语支持（i18n 国际化）
+- �🌓 深色/浅色主题切换
 - 📱 响应式设计，完美适配移动端
 - ⬆️ 智能回到顶部按钮
 - 🔒 所有数据本地处理，隐私安全
@@ -179,7 +180,8 @@ online-toolbox/
 │   └── 📁 utils/              # 工具函数
 │       ├── 📄 clipboard.js         # 剪贴板操作
 │       ├── 📄 coordinates.js       # 坐标转换算法
-│       └── 📄 coordinateInfo.js    # 坐标系信息
+│       ├── 📄 coordinateInfo.js    # 坐标系信息
+│       └── 📄 i18n.jsx             # 国际化（中英文切换）
 │
 └── 📁 dist/                   # 构建输出目录（自动生成）
     ├── 📄 index.html
