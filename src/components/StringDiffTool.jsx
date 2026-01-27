@@ -142,7 +142,7 @@ function StringDiffTool() {
 
         // 首先进行行级对比，找出相同和不同的行
         const lineChanges = getLineChanges(lines1, lines2)
-        
+
         // 对每个变化进行处理
         for (const change of lineChanges) {
             if (change.type === 'eq') {
@@ -155,7 +155,7 @@ function StringDiffTool() {
                 // 不同行，进行字符级精确对比
                 const charDiff = getCharDiffForLines(change.oldLine, change.newLine)
                 result.push(...charDiff)
-                
+
                 // 添加换行符的处理
                 result.push({ type: 'eq', char1: '\n', char2: '\n' })
             } else if (change.type === 'del') {
@@ -190,13 +190,13 @@ function StringDiffTool() {
             } else {
                 // 寻找最佳匹配策略
                 const match = findBestLineMatch(lines1, lines2, i, j)
-                
+
                 if (match.type === 'replace') {
                     // 替换：两行都存在但内容不同，进行字符级对比
-                    changes.push({ 
-                        type: 'replace', 
-                        oldLine: lines1[i], 
-                        newLine: lines2[j] 
+                    changes.push({
+                        type: 'replace',
+                        oldLine: lines1[i],
+                        newLine: lines2[j]
                     })
                     i++
                     j++
@@ -232,14 +232,14 @@ function StringDiffTool() {
     // 寻找最佳行匹配策略
     const findBestLineMatch = (lines1, lines2, i, j) => {
         const lookAhead = Math.min(5, lines1.length - i, lines2.length - j)
-        
+
         // 检查是否是简单的一对一替换
         if (i + 1 < lines1.length && j + 1 < lines2.length) {
             if (lines1[i + 1] === lines2[j + 1]) {
                 return { type: 'replace' }
             }
         }
-        
+
         // 寻找下一个匹配点
         for (let k = 1; k <= lookAhead; k++) {
             // 检查删除情况
@@ -251,7 +251,7 @@ function StringDiffTool() {
                 return { type: 'insert', count: k }
             }
         }
-        
+
         // 默认为替换
         return { type: 'replace' }
     }
@@ -262,10 +262,10 @@ function StringDiffTool() {
         const chars2 = Array.from(line2)
         const n = chars1.length
         const m = chars2.length
-        
+
         // 对于行内对比，使用精确的动态规划算法
         const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0))
-        
+
         for (let i = n - 1; i >= 0; i--) {
             for (let j = m - 1; j >= 0; j--) {
                 if (chars1[i] === chars2[j]) {
@@ -275,11 +275,11 @@ function StringDiffTool() {
                 }
             }
         }
-        
+
         // 回溯构建差异序列
         const result = []
         let i = 0, j = 0
-        
+
         while (i < n && j < m) {
             if (chars1[i] === chars2[j]) {
                 result.push({ type: 'eq', char1: chars1[i], char2: chars2[j] })
@@ -293,7 +293,7 @@ function StringDiffTool() {
                 j++
             }
         }
-        
+
         // 处理剩余字符
         while (i < n) {
             result.push({ type: 'del', char1: chars1[i], char2: null })
@@ -303,7 +303,7 @@ function StringDiffTool() {
             result.push({ type: 'add', char1: null, char2: chars2[j] })
             j++
         }
-        
+
         return result
     }
 
@@ -478,7 +478,7 @@ function StringDiffTool() {
                         }}
                         title={`点击选择${side === 'left' ? '左侧' : '右侧'}内容`}
                     >
-                        {text || '∅'}
+                        {text || <span style={{ opacity: 0.5, fontSize: '10px' }}>[空]</span>}
                     </span>
                 )
             }
@@ -533,8 +533,8 @@ function StringDiffTool() {
                             setMergedResult('')
                         }}
                         disabled={isProcessing}
-                        style={{ 
-                            backgroundColor: '#fee2e2', 
+                        style={{
+                            backgroundColor: '#fee2e2',
                             color: '#991b1b',
                             border: '1px solid #fecaca'
                         }}
@@ -694,10 +694,10 @@ function StringDiffTool() {
                             className="btn"
                             onClick={() => setMergedResult('')}
                             disabled={!mergedResult}
-                            style={{ 
-                                fontSize: '12px', 
+                            style={{
+                                fontSize: '12px',
                                 padding: '6px 12px',
-                                backgroundColor: '#fee2e2', 
+                                backgroundColor: '#fee2e2',
                                 color: '#991b1b',
                                 border: '1px solid #fecaca'
                             }}
