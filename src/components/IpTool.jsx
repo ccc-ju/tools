@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useLanguage } from '../utils/i18n'
 import { copyWithFallback } from '../utils/clipboard'
 
 function IpTool() {
+    const { t } = useLanguage()
     const [ipv4Data, setIpv4Data] = useState(null)
     const [ipv6Data, setIpv6Data] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -95,7 +97,7 @@ function IpTool() {
                         }
                     }
                 } catch (e) {
-                    throw new Error('无法获取 IP 信息，请检查网络连接')
+                    throw new Error(t('ip.networkError'))
                 }
             } else {
                 // Immediately show IP addresses (without details)
@@ -147,32 +149,32 @@ function IpTool() {
         return (
             <div style={{ marginBottom: '24px', opacity: isV6 ? 0.8 : 1 }}>
                 <div className="flex" style={{ alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <div className="muted">{type} 地址</div>
-                    {isV6 && <span style={{ fontSize: '12px', background: '#eee', padding: '2px 6px', borderRadius: '4px', color: '#666' }}>次选</span>}
+                    <div className="muted">{isV6 ? t('ip.ipv6Address') : t('ip.ipv4Address')}</div>
+                    {isV6 && <span style={{ fontSize: '12px', background: '#eee', padding: '2px 6px', borderRadius: '4px', color: '#666' }}>{t('ip.secondary')}</span>}
                 </div>
 
                 <div className="flex" style={{ gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
                     <div style={{ fontSize: isV6 ? '18px' : '24px', fontWeight: 'bold', fontFamily: 'monospace', wordBreak: 'break-all' }}>
                         {data.ip}
                     </div>
-                    <button className="btn small" onClick={() => handleCopy(data.ip)}>复制</button>
+                    <button className="btn small" onClick={() => handleCopy(data.ip)}>{t('ip.copy')}</button>
                 </div>
 
                 {isLoadingDetails ? (
                     <div className="muted" style={{ fontSize: '14px', fontStyle: 'italic' }}>
-                        正在加载详细信息...
+                        {t('ip.loadingDetails')}
                     </div>
                 ) : (
                     <>
                         <div className="grid-2">
                             <div>
-                                <div className="muted" style={{ marginBottom: '6px' }}>地理位置</div>
+                                <div className="muted" style={{ marginBottom: '6px' }}>{t('ip.location')}</div>
                                 <div style={{ fontSize: '16px', marginBottom: '12px' }}>
                                     {data.country} - {data.region} - {data.city}
                                 </div>
                             </div>
                             <div>
-                                <div className="muted" style={{ marginBottom: '6px' }}>运营商</div>
+                                <div className="muted" style={{ marginBottom: '6px' }}>{t('ip.isp')}</div>
                                 <div style={{ fontSize: '16px' }}>
                                     {data.connection?.isp || '-'}
                                 </div>
@@ -183,11 +185,11 @@ function IpTool() {
                         {(!isV6 || !ipv4Data) && (
                             <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: '14px' }}>
-                                    <div className="muted">经纬度:</div>
+                                    <div className="muted">{t('ip.latLng')}</div>
                                     <div>{data.latitude}, {data.longitude}</div>
-                                    <div className="muted">时区:</div>
+                                    <div className="muted">{t('ip.timezone')}</div>
                                     <div>{data.timezone?.id} (UTC{data.timezone?.utc})</div>
-                                    <div className="muted">ASN:</div>
+                                    <div className="muted">{t('ip.asn')}</div>
                                     <div>{data.connection?.asn || '-'}</div>
                                 </div>
                             </div>
@@ -205,9 +207,9 @@ function IpTool() {
 
         return (
             <div style={{ marginTop: '24px' }}>
-                <div className="muted" style={{ marginBottom: '12px', fontSize: '15px' }}>三方IP专业检测</div>
+                <div className="muted" style={{ marginBottom: '12px', fontSize: '15px' }}>{t('ip.thirdPartyCheck')}</div>
                 <div className="muted" style={{ marginBottom: '12px', fontSize: '13px' }}>
-                    点击下方链接跳转到专业平台查看详细报告
+                    {t('ip.thirdPartyHint')}
                 </div>
                 <div className="flex" style={{ gap: '10px', flexWrap: 'wrap' }}>
                     <a
@@ -217,7 +219,7 @@ function IpTool() {
                         className="btn"
                         style={{ textDecoration: 'none' }}
                     >
-                        📋 AbuseIPDB (黑名单查询)
+                        {t('ip.abuseIpDb')}
                     </a>
                     <a
                         href={`https://scamalytics.com/ip/${primaryIp}`}
@@ -226,7 +228,7 @@ function IpTool() {
                         className="btn"
                         style={{ textDecoration: 'none' }}
                     >
-                        🛡️ Scamalytics (欺诈分检测)
+                        {t('ip.scamalytics')}
                     </a>
                 </div>
             </div>
@@ -236,15 +238,15 @@ function IpTool() {
     return (
         <div className="card">
             <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h2>IP 地址查询</h2>
+                <h2>{t('ip.title')}</h2>
                 <button className="btn" onClick={fetchAllIps} disabled={loading}>
-                    {loading ? '查询中...' : '刷新'}
+                    {loading ? t('ip.querying') : t('ip.refresh')}
                 </button>
             </div>
 
             {error && (
                 <div style={{ padding: '12px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', marginBottom: '16px' }}>
-                    查询出错: {error}
+                    {t('ip.queryError')} {error}
                 </div>
             )}
 
@@ -255,7 +257,7 @@ function IpTool() {
 
             {!ipv4Data && !ipv6Data && !loading && !error && (
                 <div className="muted" style={{ textAlign: 'center', padding: '20px' }}>
-                    未能获取到 IP 信息
+                    {t('ip.noIpInfo')}
                 </div>
             )}
         </div>

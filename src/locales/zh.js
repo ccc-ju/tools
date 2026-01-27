@@ -1,0 +1,186 @@
+// 中文翻译
+export default {
+    // App
+    app: {
+        title: '工具箱',
+        switchToLight: '切换到浅色模式',
+        switchToDark: '切换到深色模式',
+        lightMode: '🌞 浅色',
+        darkMode: '🌙 深色',
+        scrollToTop: '回到顶部',
+        tabs: {
+            timestamp: '时间戳转换',
+            diff: '字符串对比',
+            coord: '坐标系转换',
+            ip: 'IP查询'
+        }
+    },
+
+    // TimestampTool
+    timestamp: {
+        title: '时间戳转换',
+        currentTime: '当前时间',
+        realTimeDisplay: '实时显示当前时间',
+        epochToDate: '时间戳转日期时间',
+        dateToEpoch: '日期时间转时间戳',
+        convert: '转换',
+        copy: '复制',
+        stop: '停止',
+        start: '启动',
+        result: '转换结果',
+        formatError: '格式错误',
+        formatExample: '格式错误，示例：2025-09-13 11:19:55',
+        milliseconds: '毫秒(ms)',
+        seconds: '秒(s)',
+        timestampHint: '将输入的日期时间视为系统本地时区，转换为毫秒时间戳'
+    },
+
+    // StringDiffTool
+    diff: {
+        title: '字符串对比与手动合并',
+        startCompare: '开始对比',
+        cancelProcess: '取消处理',
+        copyMerged: '复制合并结果',
+        clearAll: '清空全部',
+        originalString: '原始字符串',
+        compareString: '对比字符串',
+        pasteLeft: '在这里粘贴左侧（原始）字符串',
+        pasteRight: '在这里粘贴右侧（对比）字符串',
+        characters: '字符',
+        overallView: '📊 整体对比视图',
+        leftOriginal: '原始字符串（左侧）',
+        rightCompare: '对比字符串（右侧）',
+        clickToSelect: '点击选择',
+        leftContent: '左侧',
+        rightContent: '右侧',
+        content: '内容',
+        quickSelect: '🎯 快速选择',
+        selectAllLeft: '全选左侧',
+        selectAllRight: '全选右侧',
+        mergedResult: '合并结果（可二次编辑）',
+        copyResult: '📋 复制结果',
+        clearResult: '🗑️ 清空结果',
+        resultPlaceholder: '合并结果将显示在这里...',
+        processingLarge: '处理大型文本中，使用混合策略（行级+字符级精确对比）...',
+        processingMedium: '处理中等文本中，使用优化算法...',
+        processing: '处理文本对比中...',
+        buildingGroups: '构建差异组中...',
+        processError: '处理过程中出现错误，可能是文本过大导致的。请尝试使用较小的文本。'
+    },
+
+    // CoordinateTool
+    coord: {
+        title: '坐标系转换',
+        clear: '清空',
+        sourceCoord: '原始坐标',
+        longitude: '经度 (Longitude)',
+        latitude: '纬度 (Latitude)',
+        targetCoordSys: '目标坐标系',
+        convert: '转换坐标',
+        result: '转换结果',
+        lngResult: '经度结果',
+        latResult: '纬度结果',
+        copy: '复制',
+        validCoordError: '请输入有效的经纬度',
+        rangeError: '坐标范围错误',
+        rangeHint: '经度[-180,180]，纬度[-90,90]',
+        convertFailed: '转换失败',
+
+        // Batch convert
+        batchTitle: '批量转换',
+        batchConvert: '批量转换',
+        copyResult: '复制结果',
+        batchInputHint: '输入坐标（每行一个，格式：经度,纬度）',
+        formatError: '格式错误',
+        invalidCoord: '无效坐标',
+        sourceCoordSys: '源坐标系：',
+        targetCoordSysLabel: '目标坐标系：',
+
+        // Distance calculator
+        distanceTitle: '📏 经纬度距离计算',
+        distanceWarning: '⚠️ 重要提示：',
+        distanceWarningText: '计算距离时，两个点必须使用相同的坐标系！',
+        distanceWarningDetail1: '• 如果两个点的坐标系不同（如一个WGS84，一个GCJ02），会导致距离计算严重偏差（可能几百米）',
+        distanceWarningDetail2: '• 请先在上方"坐标系转换"中将它们转换为同一坐标系，再进行距离计算',
+        distanceWarningDetail3: '• 距离计算本身与坐标系无关，只要两点坐标系一致，结果就是准确的',
+        point1: '点 1 坐标',
+        point2: '点 2 坐标',
+        calculate: '计算距离',
+        preciseCalc: '🎯 精确计算 (Haversine公式)',
+        fastCalc: '⚡ 快速估算 (平面近似)',
+        distanceResult: '距离结果',
+        preciseHint: '使用球面三角学精确计算，适用于任意距离',
+        fastHint: '平面几何快速计算，适用于数百公里内短距离',
+        algorithmExplain: '💡 算法说明：',
+        haversineExplain: '• Haversine公式：考虑地球曲率的精确球面距离计算',
+        flatExplain: '• 平面近似：将地球局部视为平面，使用勾股定理快速计算',
+        shortDistanceHint: '• 对于几十公里内的短距离，两种方法结果非常接近',
+        longDistanceHint: '• 距离越远，平面近似的误差会略微增大（但仍在可接受范围）',
+        meters: '米',
+        kilometers: '公里',
+
+        // Coordinate systems
+        coordSysTitle: '📍 坐标系详细说明',
+        wgs84Title: '🌍 WGS84 (World Geodetic System 1984)',
+        wgs84Desc1: '• 国际标准GPS坐标系，全球通用',
+        wgs84Desc2: '• 使用平台：Google Maps、OpenStreetMap、GPS设备、国外地图服务',
+        wgs84Desc3: '• 特点：真实地理坐标，无偏移加密',
+        gcj02Title: '🇨🇳 GCJ02 (国家测绘局02坐标系)',
+        gcj02Desc1: '• 中国国家测绘局制定的加密坐标系，俗称"火星坐标"',
+        gcj02Desc2: '• 使用平台：高德地图、腾讯地图、苹果地图(中国)、谷歌地图(中国)',
+        gcj02Desc3: '• 特点：在WGS84基础上加密偏移，保护国家地理信息安全',
+        bd09Title: '🅱️ BD09 (百度09坐标系)',
+        bd09Desc1: '• 百度公司在GCJ02基础上再次加密的坐标系',
+        bd09Desc2: '• 使用平台：百度地图、百度API相关服务',
+        bd09Desc3: '• 特点：双重加密，仅百度系产品使用',
+        usageTips: '💡 使用建议：',
+        usageTip1: '• 从GPS设备获取的坐标通常是WGS84',
+        usageTip2: '• 在国内地图应用中显示需转换为对应坐标系',
+        usageTip3: '• 不同坐标系间的偏移可达几百米，转换很重要',
+        offsetRef: '📊 偏移程度参考：',
+        offsetRef1: '• WGS84 → GCJ02：通常偏移50-500米',
+        offsetRef2: '• GCJ02 → BD09：通常偏移50-200米',
+        offsetRef3: '• WGS84 → BD09：通常偏移100-600米',
+
+        // Coordinate system options
+        wgs84Option: 'WGS84 - GPS原始坐标(Google Maps/国外地图)',
+        gcj02Option: 'GCJ02 - 国测局坐标(高德/腾讯)',
+        bd09Option: 'BD09 - 百度坐标(百度地图专用)',
+        wgs84Short: 'WGS84 - GPS原始',
+        gcj02Short: 'GCJ02 - 高德/腾讯',
+        bd09Short: 'BD09 - 百度地图'
+    },
+
+    // IpTool
+    ip: {
+        title: 'IP 地址查询',
+        refresh: '刷新',
+        querying: '查询中...',
+        queryError: '查询出错:',
+        noIpInfo: '未能获取到 IP 信息',
+        ipv4Address: 'IPv4 地址',
+        ipv6Address: 'IPv6 地址',
+        secondary: '次选',
+        copy: '复制',
+        loadingDetails: '正在加载详细信息...',
+        location: '地理位置',
+        isp: '运营商',
+        latLng: '经纬度:',
+        timezone: '时区:',
+        asn: 'ASN:',
+        thirdPartyCheck: '三方IP专业检测',
+        thirdPartyHint: '点击下方链接跳转到专业平台查看详细报告',
+        abuseIpDb: '📋 AbuseIPDB (黑名单查询)',
+        scamalytics: '🛡️ Scamalytics (欺诈分检测)',
+        networkError: '无法获取 IP 信息，请检查网络连接'
+    },
+
+    // Common
+    common: {
+        copy: '复制',
+        clear: '清空',
+        convert: '转换',
+        calculate: '计算',
+        result: '结果'
+    }
+}

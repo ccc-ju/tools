@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useLanguage } from '../utils/i18n'
 import { copyWithFallback } from '../utils/clipboard'
 import { convertCoordinates, calculateDistance, calculateDistanceFast } from '../utils/coordinates'
 
 function CoordinateTool() {
+  const { t, language } = useLanguage()
   const [sourceLng, setSourceLng] = useState('')
   const [sourceLat, setSourceLat] = useState('')
   const [sourceCoordSys, setSourceCoordSys] = useState('WGS84')
@@ -28,14 +30,14 @@ function CoordinateTool() {
     const lat = parseFloat(sourceLat)
 
     if (isNaN(lng) || isNaN(lat)) {
-      setResultLng('请输入有效的经纬度')
+      setResultLng(t('coord.validCoordError'))
       setResultLat('')
       return
     }
 
     if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
-      setResultLng('坐标范围错误')
-      setResultLat('经度[-180,180]，纬度[-90,90]')
+      setResultLng(t('coord.rangeError'))
+      setResultLat(t('coord.rangeHint'))
       return
     }
 
@@ -44,7 +46,7 @@ function CoordinateTool() {
       setResultLng(result[0].toFixed(8))
       setResultLat(result[1].toFixed(8))
     } catch (e) {
-      setResultLng('转换失败')
+      setResultLng(t('coord.convertFailed'))
       setResultLat(e.message)
     }
   }
@@ -68,7 +70,7 @@ function CoordinateTool() {
     for (const line of lines) {
       const parts = line.trim().split(',')
       if (parts.length !== 2) {
-        results.push(`${line} - 格式错误`)
+        results.push(`${line} - ${t('coord.formatError')}`)
         continue
       }
 
@@ -76,7 +78,7 @@ function CoordinateTool() {
       const lat = parseFloat(parts[1])
 
       if (isNaN(lng) || isNaN(lat)) {
-        results.push(`${line} - 无效坐标`)
+        results.push(`${line} - ${t('coord.invalidCoord')}`)
         continue
       }
 
@@ -84,7 +86,7 @@ function CoordinateTool() {
         const result = convertCoordinates(lng, lat, batchSourceCoordSys, batchTargetCoordSys)
         results.push(`${result[0].toFixed(8)},${result[1].toFixed(8)}`)
       } catch (e) {
-        results.push(`${line} - 转换失败`)
+        results.push(`${line} - ${t('coord.convertFailed')}`)
       }
     }
 
@@ -98,15 +100,15 @@ function CoordinateTool() {
     const lat2 = parseFloat(point2Lat)
 
     if (isNaN(lng1) || isNaN(lat1) || isNaN(lng2) || isNaN(lat2)) {
-      setDistanceResult('请输入有效的经纬度')
+      setDistanceResult(t('coord.validCoordError'))
       setDistanceFastResult('')
       return
     }
 
     if (lng1 < -180 || lng1 > 180 || lat1 < -90 || lat1 > 90 ||
       lng2 < -180 || lng2 > 180 || lat2 < -90 || lat2 > 90) {
-      setDistanceResult('坐标范围错误')
-      setDistanceFastResult('经度[-180,180]，纬度[-90,90]')
+      setDistanceResult(t('coord.rangeError'))
+      setDistanceFastResult(t('coord.rangeHint'))
       return
     }
 
@@ -119,16 +121,16 @@ function CoordinateTool() {
       // 格式化距离显示
       const formatDistance = (dist) => {
         if (dist < 1000) {
-          return `${dist.toFixed(2)} 米`
+          return `${dist.toFixed(2)} ${t('coord.meters')}`
         } else {
-          return `${(dist / 1000).toFixed(3)} 公里 (${dist.toFixed(2)} 米)`
+          return `${(dist / 1000).toFixed(3)} ${t('coord.kilometers')} (${dist.toFixed(2)} ${t('coord.meters')})`
         }
       }
 
       setDistanceResult(formatDistance(distance))
       setDistanceFastResult(formatDistance(distanceFast))
     } catch (e) {
-      setDistanceResult('计算失败')
+      setDistanceResult(t('coord.convertFailed'))
       setDistanceFastResult(e.message)
     }
   }
@@ -146,62 +148,62 @@ function CoordinateTool() {
     <>
       <div className="card">
         <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2>坐标系转换</h2>
+          <h2>{t('coord.title')}</h2>
           <div className="flex">
-            <button className="btn" onClick={handleClear}>清空</button>
+            <button className="btn" onClick={handleClear}>{t('coord.clear')}</button>
           </div>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <div className="muted" style={{ marginBottom: '6px' }}>原始坐标</div>
+          <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.sourceCoord')}</div>
           <div className="coordinate-input-row">
             <div>
               <input
                 value={sourceLng}
                 onChange={(e) => setSourceLng(e.target.value)}
-                placeholder="经度 (Longitude)"
+                placeholder={t('coord.longitude')}
               />
             </div>
             <div>
               <input
                 value={sourceLat}
                 onChange={(e) => setSourceLat(e.target.value)}
-                placeholder="纬度 (Latitude)"
+                placeholder={t('coord.latitude')}
               />
             </div>
             <select
               value={sourceCoordSys}
               onChange={(e) => setSourceCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84 - GPS原始坐标(Google Maps/国外地图)</option>
-              <option value="GCJ02">GCJ02 - 国测局坐标(高德/腾讯)</option>
-              <option value="BD09">BD09 - 百度坐标(百度地图专用)</option>
+              <option value="WGS84">{t('coord.wgs84Option')}</option>
+              <option value="GCJ02">{t('coord.gcj02Option')}</option>
+              <option value="BD09">{t('coord.bd09Option')}</option>
             </select>
           </div>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <div className="muted" style={{ marginBottom: '6px' }}>目标坐标系</div>
+          <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.targetCoordSys')}</div>
           <select
             value={targetCoordSys}
             onChange={(e) => setTargetCoordSys(e.target.value)}
           >
-            <option value="WGS84">WGS84 - GPS原始坐标(Google Maps/国外地图)</option>
-            <option value="GCJ02">GCJ02 - 国测局坐标(高德/腾讯)</option>
-            <option value="BD09">BD09 - 百度坐标(百度地图专用)</option>
+            <option value="WGS84">{t('coord.wgs84Option')}</option>
+            <option value="GCJ02">{t('coord.gcj02Option')}</option>
+            <option value="BD09">{t('coord.bd09Option')}</option>
           </select>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <button className="btn dark" onClick={handleConvert}>转换坐标</button>
+          <button className="btn dark" onClick={handleConvert}>{t('coord.convert')}</button>
         </div>
 
         <div>
-          <div className="muted" style={{ marginBottom: '6px' }}>转换结果</div>
+          <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.result')}</div>
           <div className="coordinate-result-row">
-            <input value={resultLng} readOnly placeholder="经度结果" />
-            <input value={resultLat} readOnly placeholder="纬度结果" />
-            <button className="btn" onClick={handleCopyResult}>复制</button>
+            <input value={resultLng} readOnly placeholder={t('coord.lngResult')} />
+            <input value={resultLat} readOnly placeholder={t('coord.latResult')} />
+            <button className="btn" onClick={handleCopyResult}>{t('coord.copy')}</button>
           </div>
         </div>
 
@@ -209,16 +211,16 @@ function CoordinateTool() {
 
       <div className="card">
         <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2>批量转换</h2>
+          <h2>{t('coord.batchTitle')}</h2>
           <div className="flex">
-            <button className="btn" onClick={handleBatchConvert}>批量转换</button>
-            <button className="btn" onClick={() => copyWithFallback(batchOutput)}>复制结果</button>
+            <button className="btn" onClick={handleBatchConvert}>{t('coord.batchConvert')}</button>
+            <button className="btn" onClick={() => copyWithFallback(batchOutput)}>{t('coord.copyResult')}</button>
           </div>
         </div>
 
         <div className="grid-2">
           <div>
-            <div className="muted" style={{ marginBottom: '6px' }}>输入坐标（每行一个，格式：经度,纬度）</div>
+            <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.batchInputHint')}</div>
             <textarea
               value={batchInput}
               onChange={(e) => setBatchInput(e.target.value)}
@@ -228,32 +230,32 @@ function CoordinateTool() {
             />
           </div>
           <div>
-            <div className="muted" style={{ marginBottom: '6px' }}>转换结果</div>
+            <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.result')}</div>
             <textarea value={batchOutput} readOnly />
           </div>
         </div>
 
         <div className="row" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
           <div>
-            <label className="muted">源坐标系：</label>
+            <label className="muted">{t('coord.sourceCoordSys')}</label>
             <select
               value={batchSourceCoordSys}
               onChange={(e) => setBatchSourceCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84 - GPS原始</option>
-              <option value="GCJ02">GCJ02 - 高德/腾讯</option>
-              <option value="BD09">BD09 - 百度地图</option>
+              <option value="WGS84">{t('coord.wgs84Short')}</option>
+              <option value="GCJ02">{t('coord.gcj02Short')}</option>
+              <option value="BD09">{t('coord.bd09Short')}</option>
             </select>
           </div>
           <div>
-            <label className="muted">目标坐标系：</label>
+            <label className="muted">{t('coord.targetCoordSysLabel')}</label>
             <select
               value={batchTargetCoordSys}
               onChange={(e) => setBatchTargetCoordSys(e.target.value)}
             >
-              <option value="WGS84">WGS84 - GPS原始</option>
-              <option value="GCJ02">GCJ02 - 高德/腾讯</option>
-              <option value="BD09">BD09 - 百度地图</option>
+              <option value="WGS84">{t('coord.wgs84Short')}</option>
+              <option value="GCJ02">{t('coord.gcj02Short')}</option>
+              <option value="BD09">{t('coord.bd09Short')}</option>
             </select>
           </div>
         </div>
@@ -261,139 +263,139 @@ function CoordinateTool() {
 
       <div className="card">
         <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2>📏 经纬度距离计算</h2>
+          <h2>{t('coord.distanceTitle')}</h2>
           <div className="flex">
-            <button className="btn" onClick={handleClearDistance}>清空</button>
+            <button className="btn" onClick={handleClearDistance}>{t('coord.clear')}</button>
           </div>
         </div>
 
         <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(255, 193, 7, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 193, 7, 0.3)' }}>
           <div style={{ fontSize: '14px', color: '#ff9800' }}>
-            ⚠️ <strong>重要提示：</strong>计算距离时，两个点必须使用<strong>相同的坐标系</strong>！
+            <strong>{t('coord.distanceWarning')}</strong>{t('coord.distanceWarningText')}
           </div>
           <div style={{ fontSize: '13px', color: '#666', marginTop: '6px' }}>
-            • 如果两个点的坐标系不同（如一个WGS84，一个GCJ02），会导致距离计算严重偏差（可能几百米）<br />
-            • 请先在上方"坐标系转换"中将它们转换为同一坐标系，再进行距离计算<br />
-            • 距离计算本身与坐标系无关，只要两点坐标系一致，结果就是准确的
+            {t('coord.distanceWarningDetail1')}<br />
+            {t('coord.distanceWarningDetail2')}<br />
+            {t('coord.distanceWarningDetail3')}
           </div>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <div className="muted" style={{ marginBottom: '6px' }}>点 1 坐标</div>
+          <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.point1')}</div>
           <div className="row" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <input
               value={point1Lng}
               onChange={(e) => setPoint1Lng(e.target.value)}
-              placeholder="经度 (Longitude)"
+              placeholder={t('coord.longitude')}
             />
             <input
               value={point1Lat}
               onChange={(e) => setPoint1Lat(e.target.value)}
-              placeholder="纬度 (Latitude)"
+              placeholder={t('coord.latitude')}
             />
           </div>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <div className="muted" style={{ marginBottom: '6px' }}>点 2 坐标</div>
+          <div className="muted" style={{ marginBottom: '6px' }}>{t('coord.point2')}</div>
           <div className="row" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <input
               value={point2Lng}
               onChange={(e) => setPoint2Lng(e.target.value)}
-              placeholder="经度 (Longitude)"
+              placeholder={t('coord.longitude')}
             />
             <input
               value={point2Lat}
               onChange={(e) => setPoint2Lat(e.target.value)}
-              placeholder="纬度 (Latitude)"
+              placeholder={t('coord.latitude')}
             />
           </div>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <button className="btn dark" onClick={handleCalculateDistance}>计算距离</button>
+          <button className="btn dark" onClick={handleCalculateDistance}>{t('coord.calculate')}</button>
         </div>
 
         <div className="grid-2">
           <div>
             <div className="muted" style={{ marginBottom: '6px' }}>
-              🎯 精确计算 (Haversine公式)
+              {t('coord.preciseCalc')}
             </div>
             <input
               value={distanceResult}
               readOnly
-              placeholder="距离结果"
+              placeholder={t('coord.distanceResult')}
               style={{ fontWeight: '500', color: '#2196f3' }}
             />
             <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              使用球面三角学精确计算，适用于任意距离
+              {t('coord.preciseHint')}
             </div>
           </div>
           <div>
             <div className="muted" style={{ marginBottom: '6px' }}>
-              ⚡ 快速估算 (平面近似)
+              {t('coord.fastCalc')}
             </div>
             <input
               value={distanceFastResult}
               readOnly
-              placeholder="距离结果"
+              placeholder={t('coord.distanceResult')}
               style={{ fontWeight: '500', color: '#4caf50' }}
             />
             <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              平面几何快速计算，适用于数百公里内短距离
+              {t('coord.fastHint')}
             </div>
           </div>
         </div>
 
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(33, 150, 243, 0.05)', borderRadius: '8px' }}>
           <div style={{ fontSize: '13px', color: '#666' }}>
-            <strong>💡 算法说明：</strong><br />
-            • <strong>Haversine公式</strong>：考虑地球曲率的精确球面距离计算<br />
-            • <strong>平面近似</strong>：将地球局部视为平面，使用勾股定理快速计算<br />
-            • 对于几十公里内的短距离，两种方法结果非常接近<br />
-            • 距离越远，平面近似的误差会略微增大（但仍在可接受范围）
+            <strong>{t('coord.algorithmExplain')}</strong><br />
+            {t('coord.haversineExplain')}<br />
+            {t('coord.flatExplain')}<br />
+            {t('coord.shortDistanceHint')}<br />
+            {t('coord.longDistanceHint')}
           </div>
         </div>
       </div>
 
       <div className="card">
-        <h2>📍 坐标系详细说明</h2>
+        <h2>{t('coord.coordSysTitle')}</h2>
 
         <div className="coord-info-section">
           <div style={{ marginBottom: '16px' }}>
-            <strong className="coord-wgs84">🌍 WGS84 (World Geodetic System 1984)</strong><br />
-            <span className="coord-text">• 国际标准GPS坐标系，全球通用</span><br />
-            <span className="coord-text">• 使用平台：Google Maps、OpenStreetMap、GPS设备、国外地图服务</span><br />
-            <span className="coord-text">• 特点：真实地理坐标，无偏移加密</span>
+            <strong className="coord-wgs84">{t('coord.wgs84Title')}</strong><br />
+            <span className="coord-text">{t('coord.wgs84Desc1')}</span><br />
+            <span className="coord-text">{t('coord.wgs84Desc2')}</span><br />
+            <span className="coord-text">{t('coord.wgs84Desc3')}</span>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <strong className="coord-gcj02">🇨🇳 GCJ02 (国家测绘局02坐标系)</strong><br />
-            <span className="coord-text">• 中国国家测绘局制定的加密坐标系，俗称"火星坐标"</span><br />
-            <span className="coord-text">• 使用平台：高德地图、腾讯地图、苹果地图(中国)、谷歌地图(中国)</span><br />
-            <span className="coord-text">• 特点：在WGS84基础上加密偏移，保护国家地理信息安全</span>
+            <strong className="coord-gcj02">{t('coord.gcj02Title')}</strong><br />
+            <span className="coord-text">{t('coord.gcj02Desc1')}</span><br />
+            <span className="coord-text">{t('coord.gcj02Desc2')}</span><br />
+            <span className="coord-text">{t('coord.gcj02Desc3')}</span>
           </div>
 
           <div>
-            <strong className="coord-bd09">🅱️ BD09 (百度09坐标系)</strong><br />
-            <span className="coord-text">• 百度公司在GCJ02基础上再次加密的坐标系</span><br />
-            <span className="coord-text">• 使用平台：百度地图、百度API相关服务</span><br />
-            <span className="coord-text">• 特点：双重加密，仅百度系产品使用</span>
+            <strong className="coord-bd09">{t('coord.bd09Title')}</strong><br />
+            <span className="coord-text">{t('coord.bd09Desc1')}</span><br />
+            <span className="coord-text">{t('coord.bd09Desc2')}</span><br />
+            <span className="coord-text">{t('coord.bd09Desc3')}</span>
           </div>
         </div>
 
         <div className="coord-tip-section">
-          <strong className="coord-text">💡 使用建议：</strong><br />
-          <span className="coord-text">• 从GPS设备获取的坐标通常是WGS84</span><br />
-          <span className="coord-text">• 在国内地图应用中显示需转换为对应坐标系</span><br />
-          <span className="coord-text">• 不同坐标系间的偏移可达几百米，转换很重要</span>
+          <strong className="coord-text">{t('coord.usageTips')}</strong><br />
+          <span className="coord-text">{t('coord.usageTip1')}</span><br />
+          <span className="coord-text">{t('coord.usageTip2')}</span><br />
+          <span className="coord-text">{t('coord.usageTip3')}</span>
         </div>
 
         <div className="coord-ref-section">
-          <strong className="coord-text">📊 偏移程度参考：</strong><br />
-          <span className="coord-text">• WGS84 → GCJ02：通常偏移50-500米</span><br />
-          <span className="coord-text">• GCJ02 → BD09：通常偏移50-200米</span><br />
-          <span className="coord-text">• WGS84 → BD09：通常偏移100-600米</span>
+          <strong className="coord-text">{t('coord.offsetRef')}</strong><br />
+          <span className="coord-text">{t('coord.offsetRef1')}</span><br />
+          <span className="coord-text">{t('coord.offsetRef2')}</span><br />
+          <span className="coord-text">{t('coord.offsetRef3')}</span>
         </div>
       </div>
     </>

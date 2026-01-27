@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
+import { useLanguage } from '../utils/i18n'
 import { copyWithFallback } from '../utils/clipboard'
 
 function StringDiffTool() {
+    const { t } = useLanguage()
     const [leftText, setLeftText] = useState('')
     const [rightText, setRightText] = useState('')
     const [diffGroups, setDiffGroups] = useState([])
@@ -353,11 +355,11 @@ function StringDiffTool() {
         try {
             // 根据字符串大小显示不同的处理消息
             if (totalLength > 50000) {
-                setProcessingMessage('处理大型文本中，使用混合策略（行级+字符级精确对比）...')
+                setProcessingMessage(t('diff.processingLarge'))
             } else if (totalLength > 10000) {
-                setProcessingMessage('处理中等文本中，使用优化算法...')
+                setProcessingMessage(t('diff.processingMedium'))
             } else {
-                setProcessingMessage('处理文本对比中...')
+                setProcessingMessage(t('diff.processing'))
             }
 
             // 使用setTimeout让UI有机会更新
@@ -373,7 +375,7 @@ function StringDiffTool() {
                 return
             }
 
-            setProcessingMessage('构建差异组中...')
+            setProcessingMessage(t('diff.buildingGroups'))
             await new Promise(resolve => setTimeout(resolve, 50))
 
             const groups = []
@@ -442,13 +444,13 @@ function StringDiffTool() {
 
         } catch (error) {
             console.error('Diff processing error:', error)
-            alert('处理过程中出现错误，可能是文本过大导致的。请尝试使用较小的文本。')
+            alert(t('diff.processError'))
         } finally {
             setIsProcessing(false)
             setProcessingMessage('')
             abortControllerRef.current = null
         }
-    }, [leftText, rightText, isProcessing])
+    }, [leftText, rightText, isProcessing, t])
 
     const renderMerged = (groups = diffGroups, pickedState = picked) => {
         const result = groups.map(g =>
@@ -500,7 +502,7 @@ function StringDiffTool() {
                             borderRadius: '3px',
                             padding: '1px 2px'
                         }}
-                        title={`点击选择${side === 'left' ? '左侧' : '右侧'}内容`}
+                        title={`${t('diff.clickToSelect')}${side === 'left' ? t('diff.leftContent') : t('diff.rightContent')}${t('diff.content')}`}
                     >
                         {text}
                     </span>
@@ -512,7 +514,7 @@ function StringDiffTool() {
     return (
         <div className="card">
             <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2>字符串对比与手动合并</h2>
+                <h2>{t('diff.title')}</h2>
                 <div className="flex" style={{ gap: '12px', alignItems: 'center' }}>
                     {isProcessing && (
                         <div style={{
@@ -538,14 +540,14 @@ function StringDiffTool() {
                         onClick={doDiff}
                         disabled={isProcessing && !abortControllerRef.current}
                     >
-                        {isProcessing ? '取消处理' : '开始对比'}
+                        {isProcessing ? t('diff.cancelProcess') : t('diff.startCompare')}
                     </button>
                     <button
                         className="btn"
                         onClick={() => copyWithFallback(mergedResult)}
                         disabled={!mergedResult}
                     >
-                        复制合并结果
+                        {t('diff.copyMerged')}
                     </button>
                     <button
                         className="btn"
@@ -563,7 +565,7 @@ function StringDiffTool() {
                             border: '1px solid #fecaca'
                         }}
                     >
-                        清空全部
+                        {t('diff.clearAll')}
                     </button>
                 </div>
             </div>
@@ -580,34 +582,34 @@ function StringDiffTool() {
             <div className="grid-2" style={{ marginBottom: '24px' }}>
                 <div>
                     <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>
-                        原始字符串
+                        {t('diff.originalString')}
                         {leftText && (
                             <span style={{ fontSize: '12px', marginLeft: '8px' }}>
-                                ({leftText.length.toLocaleString()} 字符)
+                                ({leftText.length.toLocaleString()} {t('diff.characters')})
                             </span>
                         )}
                     </div>
                     <textarea
                         value={leftText}
                         onChange={(e) => setLeftText(e.target.value)}
-                        placeholder="在这里粘贴左侧（原始）字符串"
+                        placeholder={t('diff.pasteLeft')}
                         style={{ borderRadius: '8px', padding: '16px', fontSize: '14px', minHeight: '120px' }}
                         disabled={isProcessing}
                     />
                 </div>
                 <div>
                     <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>
-                        对比字符串
+                        {t('diff.compareString')}
                         {rightText && (
                             <span style={{ fontSize: '12px', marginLeft: '8px' }}>
-                                ({rightText.length.toLocaleString()} 字符)
+                                ({rightText.length.toLocaleString()} {t('diff.characters')})
                             </span>
                         )}
                     </div>
                     <textarea
                         value={rightText}
                         onChange={(e) => setRightText(e.target.value)}
-                        placeholder="在这里粘贴右侧（对比）字符串"
+                        placeholder={t('diff.pasteRight')}
                         style={{ borderRadius: '8px', padding: '16px', fontSize: '14px', minHeight: '120px' }}
                         disabled={isProcessing}
                     />
@@ -619,10 +621,10 @@ function StringDiffTool() {
             {/* 整体对比视图 */}
             {diffGroups.length > 0 && (
                 <div style={{ marginBottom: '24px' }}>
-                    <div className="muted" style={{ marginBottom: '12px', fontWeight: '500' }}>📊 整体对比视图</div>
+                    <div className="muted" style={{ marginBottom: '12px', fontWeight: '500' }}>{t('diff.overallView')}</div>
                     <div className="grid-2">
                         <div>
-                            <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>原始字符串（左侧）</div>
+                            <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>{t('diff.leftOriginal')}</div>
                             <div style={{
                                 padding: '16px',
                                 background: 'var(--card)',
@@ -639,7 +641,7 @@ function StringDiffTool() {
                             </div>
                         </div>
                         <div>
-                            <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>对比字符串（右侧）</div>
+                            <div className="muted" style={{ marginBottom: '8px', fontSize: '12px' }}>{t('diff.rightCompare')}</div>
                             <div style={{
                                 padding: '16px',
                                 background: 'var(--card)',
@@ -662,7 +664,7 @@ function StringDiffTool() {
             {/* 快速选择按钮 */}
             {diffGroups.length > 0 && diffGroups.some(g => g.kind !== 'eq') && (
                 <div style={{ marginBottom: '20px' }}>
-                    <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>🎯 快速选择</div>
+                    <div className="muted" style={{ marginBottom: '8px', fontWeight: '500' }}>{t('diff.quickSelect')}</div>
                     <div className="flex" style={{ gap: '12px' }}>
                         <button
                             className="btn"
@@ -675,7 +677,7 @@ function StringDiffTool() {
                                 renderMerged(diffGroups, newPicked)
                             }}
                         >
-                            全选左侧
+                            {t('diff.selectAllLeft')}
                         </button>
                         <button
                             className="btn"
@@ -688,7 +690,7 @@ function StringDiffTool() {
                                 renderMerged(diffGroups, newPicked)
                             }}
                         >
-                            全选右侧
+                            {t('diff.selectAllRight')}
                         </button>
                     </div>
                 </div>
@@ -698,10 +700,10 @@ function StringDiffTool() {
             <div>
                 <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <div className="muted" style={{ fontWeight: '500' }}>
-                        合并结果（可二次编辑）
+                        {t('diff.mergedResult')}
                         {mergedResult && (
                             <span style={{ fontSize: '12px', marginLeft: '8px' }}>
-                                ({mergedResult.length.toLocaleString()} 字符)
+                                ({mergedResult.length.toLocaleString()} {t('diff.characters')})
                             </span>
                         )}
                     </div>
@@ -712,7 +714,7 @@ function StringDiffTool() {
                             disabled={!mergedResult}
                             style={{ fontSize: '12px', padding: '6px 12px' }}
                         >
-                            📋 复制结果
+                            {t('diff.copyResult')}
                         </button>
                         <button
                             className="btn"
@@ -726,14 +728,14 @@ function StringDiffTool() {
                                 border: '1px solid #fecaca'
                             }}
                         >
-                            🗑️ 清空结果
+                            {t('diff.clearResult')}
                         </button>
                     </div>
                 </div>
                 <textarea
                     value={mergedResult}
                     onChange={(e) => setMergedResult(e.target.value)}
-                    placeholder="合并结果将显示在这里..."
+                    placeholder={t('diff.resultPlaceholder')}
                     style={{
                         borderRadius: '8px',
                         padding: '16px',
