@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev:frontend": "vite",
-    "dev": "wrangler pages dev -- npm run dev:frontend",
+    "dev": "npm run build && wrangler pages dev dist",
+    "dev:hot": "wrangler pages dev -- npm run dev:frontend",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -17,7 +19,7 @@
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
-    "baseline-browser-mapping": "^2.8.32",
+    "baseline-browser-mapping": "^2.10.32",
     "vite": "^5.0.8",
     "wrangler": "^4.49.0"
   }

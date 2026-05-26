@@ -12,7 +12,8 @@ export default {
             timestamp: 'Timestamp',
             diff: 'String Diff',
             coord: 'Coordinates',
-            ip: 'IP Lookup'
+            ip: 'IP Lookup',
+            amap: 'Amap API'
         }
     },
 
@@ -173,6 +174,53 @@ export default {
         abuseIpDb: '📋 AbuseIPDB (Blacklist Check)',
         scamalytics: '🛡️ Scamalytics (Fraud Detection)',
         networkError: 'Unable to fetch IP info, please check your network connection'
+    },
+
+    // AmapApiTool
+    amap: {
+        title: 'Amap API Tester',
+        subtitle: 'Amap (Gaode) Map API request tool with DIGEST/TOKEN signature support',
+        basicConfig: 'Basic Config',
+        httpMethod: 'HTTP Method',
+        signType: 'Signature Type',
+        digestConfig: 'DIGEST Signature Config',
+        tokenConfig: 'TOKEN Signature Config',
+        selectCity: 'Select City (Auto-fill)',
+        selectCityPlaceholder: 'Select a city...',
+        autoSync: 'Auto-synced from Client Key',
+        urlParams: 'URL Parameters',
+        postParams: 'POST Body Parameters',
+        autoTimestamp: 'Auto-added param',
+        paramName: 'Param name',
+        paramValue: 'Param value',
+        addParam: 'Add Param',
+        actions: 'Actions',
+        tabRequest: 'Request',
+        tabCurl: 'Generate CURL',
+        generateUrl: 'Generate URL',
+        browserOpen: 'Open in Browser',
+        fetchRequest: 'Fetch Request',
+        copyUrl: 'Copy URL',
+        clearAll: 'Clear All',
+        generateCurl: 'Generate CURL',
+        copyCurl: 'Copy CURL',
+        downloadScript: 'Download Script',
+        sending: 'Sending',
+        generatedUrl: 'Generated URL',
+        paramDetails: 'Request Params',
+        response: 'Response',
+        copyResponse: 'Copy Response',
+        errorNoUrl: 'Please enter an API URL',
+        errorDigestConfig: 'Please fill in complete DIGEST signature config',
+        errorTokenConfig: 'Please fill in complete TOKEN signature config',
+        fetchError: 'Request failed',
+        requestAborted: 'Request aborted',
+        abort: 'Abort',
+        dataSize: 'Size',
+        truncated: 'Truncated',
+        expandAll: 'Expand All',
+        collapse: 'Collapse',
+        largeDataWarning: 'Large data, expanding may cause lag'
     },
 
     // Common

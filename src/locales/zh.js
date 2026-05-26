@@ -12,7 +12,8 @@ export default {
             timestamp: '时间戳转换',
             diff: '字符串对比',
             coord: '坐标系转换',
-            ip: 'IP查询'
+            ip: 'IP查询',
+            amap: '高德API测试'
         }
     },
 
@@ -173,6 +174,53 @@ export default {
         abuseIpDb: '📋 AbuseIPDB (黑名单查询)',
         scamalytics: '🛡️ Scamalytics (欺诈分检测)',
         networkError: '无法获取 IP 信息，请检查网络连接'
+    },
+
+    // AmapApiTool
+    amap: {
+        title: '高德API接口测试',
+        subtitle: '支持DIGEST/TOKEN签名的高德地图API请求工具',
+        basicConfig: '基础配置',
+        httpMethod: 'HTTP方法',
+        signType: '签名类型',
+        digestConfig: 'DIGEST签名配置',
+        tokenConfig: 'TOKEN签名配置',
+        selectCity: '选择城市（自动填充）',
+        selectCityPlaceholder: '请选择城市...',
+        autoSync: '自动同步Client Key',
+        urlParams: 'URL参数',
+        postParams: 'POST请求体参数',
+        autoTimestamp: '自动添加参数',
+        paramName: '参数名',
+        paramValue: '参数值',
+        addParam: '添加参数',
+        actions: '操作',
+        tabRequest: '请求操作',
+        tabCurl: '生成CURL',
+        generateUrl: '生成完整URL',
+        browserOpen: '浏览器访问',
+        fetchRequest: 'Fetch请求',
+        copyUrl: '复制URL',
+        clearAll: '清空所有',
+        generateCurl: '生成CURL命令',
+        copyCurl: '复制CURL',
+        downloadScript: '下载脚本',
+        sending: '发送中',
+        generatedUrl: '生成的URL',
+        paramDetails: '请求参数',
+        response: '响应结果',
+        copyResponse: '复制响应',
+        errorNoUrl: '请输入API URL',
+        errorDigestConfig: '请填写完整的DIGEST签名配置',
+        errorTokenConfig: '请填写完整的TOKEN签名配置',
+        fetchError: '请求失败',
+        requestAborted: '请求已取消',
+        abort: '取消',
+        dataSize: '数据大小',
+        truncated: '已截断',
+        expandAll: '展开全部',
+        collapse: '收起',
+        largeDataWarning: '数据量较大，展开可能导致页面卡顿'
     },
 
     // Common

@@ -4,6 +4,7 @@ import TimestampTool from './components/TimestampTool'
 import StringDiffTool from './components/StringDiffTool'
 import CoordinateTool from './components/CoordinateTool'
 import IpTool from './components/IpTool'
+import AmapApiTool from './components/AmapApiTool'
 
 function App() {
     const { t, language, toggleLanguage } = useLanguage()
@@ -20,7 +21,8 @@ function App() {
         { id: 'ts', labelKey: 'app.tabs.timestamp', component: TimestampTool },
         { id: 'diff', labelKey: 'app.tabs.diff', component: StringDiffTool },
         { id: 'coord', labelKey: 'app.tabs.coord', component: CoordinateTool },
-        { id: 'ip', labelKey: 'app.tabs.ip', component: IpTool }
+        { id: 'ip', labelKey: 'app.tabs.ip', component: IpTool },
+        { id: 'amap', labelKey: 'app.tabs.amap', component: AmapApiTool }
     ]
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component
