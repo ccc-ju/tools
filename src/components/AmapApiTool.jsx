@@ -93,12 +93,12 @@ function AmapApiTool() {
     const [selectedCity, setSelectedCity] = useState('shenzhen')
 
     // DIGEST 配置
-    const [clientKey, setClientKey] = useState('ee869215498b7a7216d8964cfc303041')
-    const [clientSecret, setClientSecret] = useState('33ade82ee5b0b367f73077832e879f03')
+    const [clientKey, setClientKey] = useState('')
+    const [clientSecret, setClientSecret] = useState('')
 
     // TOKEN 配置
-    const [apiKey, setApiKey] = useState('d05d7417d6f70eb5f6cbf8a72a824844')
-    const [apiSecret, setApiSecret] = useState('6eaa4cc617ebdcbb1546f989b3dd363b')
+    const [apiKey, setApiKey] = useState('')
+    const [apiSecret, setApiSecret] = useState('')
     const [appName, setAppName] = useState('dz-amap-sdzl')
 
     // 参数管理

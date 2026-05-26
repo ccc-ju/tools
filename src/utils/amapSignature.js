@@ -74,25 +74,25 @@ export const cityConfigs = {
     shenzhen: {
         name: '深圳',
         nameEn: 'Shenzhen',
-        clientKey: 'ee869215498b7a7216d8964cfc303041',
-        clientSecret: '33ade82ee5b0b367f73077832e879f03'
+        clientKey: '',
+        clientSecret: ''
     },
     nanning: {
         name: '南宁',
         nameEn: 'Nanning',
-        clientKey: '2ffe59f5939a7f00102f2b3091b6e216',
-        clientSecret: 'ea0ccae79fd87857ad60c3c64e683756'
+        clientKey: '',
+        clientSecret: ''
     },
     quzhou1: {
         name: '衢州1',
         nameEn: 'Quzhou 1',
-        clientKey: '934c26e878d8eeb0253705d153c97334',
-        clientSecret: '39b4a34f0b17e8ef0b4cdfa3a6b273e9'
+        clientKey: '',
+        clientSecret: ''
     },
     quzhou2: {
         name: '衢州2',
         nameEn: 'Quzhou 2',
-        clientKey: 'd05d7417d6f70eb5f6cbf8a72a824844',
-        clientSecret: 'b6c8e84fc756d898ccf3897c5a1625a0'
+        clientKey: '',
+        clientSecret: ''
     }
 }
